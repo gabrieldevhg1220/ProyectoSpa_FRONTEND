@@ -1,0 +1,81 @@
+@use 'sass:color';
+
+/// Importar fuentes desde Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@400;500;600&display=swap');
+
+// Definir paleta de colores
+$primary: #4A8A7B; // Verde Jade Suave (Botones/enlaces activos)
+$primary-dark: #3D6F63; // Variante oscurecida de primary
+$secondary: #E8ECEF; // Gris Claro Frío (Fondo secundario/secciones)
+$secondary-dark: #CED4DA; // Variante oscurecida de secondary
+$accent: #06c7c4; // Azul Lavanda Suave (Títulos/énfasis) ***
+$accent-dark: #06c7c4; // Variante oscurecida de accent ***
+$neutral: #F7F9FA; // Blanco Hielo (Elementos destacados)
+$background: #F1F5F8; // Azul Pálido Frío (Fondo principal)
+$text: #2D3748; // Gris Azulado Oscuro (Texto principal)
+$text-dark: #1A202C; // Variante oscurecida de text
+$border-shadow: #A3BFFA; // Azul Suave (Bordes/sombras)
+$warning: #F6AD55; // Naranja para botones de edición
+$warning-dark: #DD9B4D; // Variante oscurecida de warning
+$danger: #F56565; // Rojo para botones de eliminación
+$danger-dark: #DC4C4C; // Variante oscurecida de danger
+$success: #48BB78; // Verde para botones de éxito
+$success-dark: #3A9D62; // Variante oscurecida de success
+
+body {
+  background: $background;
+  font-family: 'Inter', sans-serif;
+  color: $text;
+  font-size: 16px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  color: $accent;
+}
+
+p, a, button, input, label, select, option {
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-primary {
+  background-color: $primary;
+  border-color: $primary;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: $primary-dark;
+    border-color: $primary-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-accent {
+  background-color: $accent;
+  border-color: $accent;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: $accent-dark;
+    border-color: $accent-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.form-control, .form-select {
+  border-radius: 8px;
+  border: 1px solid $border-shadow;
+  padding: 12px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 8px rgba($primary, 0.2);
+    outline: none;
+  }
+}

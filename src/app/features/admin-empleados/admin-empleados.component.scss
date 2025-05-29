@@ -1,0 +1,148 @@
+@use '../../../../src/styles.scss' as styles;
+@use 'sass:color';
+
+.container {
+  max-width: 1400px;
+  background-color: styles.$background;
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.card {
+  background-color: styles.$neutral;
+  border-radius: 16px;
+  border: 1px solid styles.$border-shadow;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(styles.$border-shadow, 0.3);
+  }
+}
+
+.card-title {
+  color: styles.$accent;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.form-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: styles.$text;
+}
+
+.form-control, .form-select {
+  border-radius: 8px;
+  border: 1px solid styles.$border-shadow;
+  padding: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  &:focus {
+    border-color: styles.$primary;
+    box-shadow: 0 0 8px rgba(styles.$primary, 0.2);
+    outline: none;
+  }
+}
+
+.btn-custom {
+  background-color: styles.$primary;
+  border-color: styles.$primary;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$primary-dark;
+    border-color: styles.$primary-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-secondary-custom {
+  background-color: styles.$text;
+  border-color: styles.$text;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$text-dark;
+    border-color: styles.$text-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-warning-custom {
+  background-color: styles.$warning;
+  border-color: styles.$warning;
+  color: #fff;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$warning-dark;
+    border-color: styles.$warning-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-danger-custom {
+  background-color: styles.$danger;
+  border-color: styles.$danger;
+  color: #fff;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$danger-dark;
+    border-color: styles.$danger-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.table {
+  background-color: styles.$neutral;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-header {
+  background-color: styles.$primary;
+  color: #fff;
+  th {
+    padding: 15px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+}
+
+.table td {
+  padding: 15px;
+  vertical-align: middle;
+  font-family: 'Inter', sans-serif;
+  color: styles.$text;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(styles.$secondary, 0.5);
+}
+
+.modal-content {
+  background-color: styles.$neutral;
+  border-radius: 16px;
+  border: 1px solid styles.$border-shadow;
+}
+
+.modal-header,
+.modal-footer {
+  border-color: styles.$border-shadow;
+  background-color: styles.$neutral;
+}

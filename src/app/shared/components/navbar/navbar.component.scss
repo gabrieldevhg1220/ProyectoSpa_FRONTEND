@@ -1,0 +1,162 @@
+@use '../../../../styles.scss' as styles;
+
+.navbar {
+  background-color: styles.$neutral;
+  padding: 15px 20px;
+  box-shadow: 0 4px 12px rgba(styles.$border-shadow, 0.2);
+  transition: background-color 0.3s ease;
+  
+  .navbar-brand {
+    color: styles.$accent;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    img {
+      margin-right: 12px;
+      transition: transform 0.3s ease;
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+    &:hover {
+      color: styles.$accent-dark;
+    }
+  }
+
+  .navbar-nav {
+    .nav-link {
+      color: styles.$text;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin: 0 15px;
+      transition: color 0.3s ease, transform 0.2s ease;
+      
+      &.admin-link, &.recepcionista-link {
+        color: styles.$primary;
+      }
+      
+      &:hover {
+        color: styles.$primary-dark;
+        transform: translateY(-2px);
+      }
+      
+      &.active {
+        background-color: rgba(styles.$primary, 0.1);
+        border-radius: 8px;
+        padding: 8px 15px;
+      }
+    }
+
+    .btn-primary, .btn-accent {
+      background-color: styles.$primary;
+      border-color: styles.$primary;
+      color: #fff;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      border-radius: 8px;
+      padding: 8px 20px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      &:hover {
+        background-color: styles.$primary-dark;
+        border-color: styles.$primary-dark;
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+.modal-content {
+  background-color: styles.$neutral;
+  border: 1px solid styles.$border-shadow;
+  border-radius: 16px;
+  
+  .modal-header {
+    background-color: styles.$neutral;
+    border-bottom: 1px solid styles.$border-shadow;
+    
+    .modal-title {
+      color: styles.$accent;
+      font-family: 'Sorts Mill Goudy', serif;
+      font-size: 1.5rem;
+      font-weight: 550;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .modal-body {
+    color: styles.$text;
+    
+    .social-link {
+      color: styles.$primary;
+      text-decoration: none;
+      margin: 0 12px;
+      i {
+        font-size: 1.3rem;
+      }
+      &:hover {
+        color: styles.$primary-dark;
+        text-decoration: none;
+      }
+    }
+
+    .btn-primary {
+      background-color: styles.$primary;
+      border-color: styles.$primary;
+      &:hover {
+        background-color: styles.$primary-dark;
+        border-color: styles.$primary-dark;
+      }
+    }
+  }
+
+  .modal-footer {
+    border-top: 1px solid styles.$border-shadow;
+    
+    .btn-secondary {
+      background-color: styles.$text;
+      border-color: styles.$text;
+      color: #fff;
+      border-radius: 8px;
+      &:hover {
+        background-color: styles.$text-dark;
+        border-color: styles.$text-dark;
+      }
+    }
+  }
+}
+
+.card {
+  border-color: styles.$border-shadow;
+  border-radius: 12px;
+  
+  .card-title {
+    color: #2ea6b4;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 750;
+    letter-spacing: 0.02em;
+  }
+  
+  .card-text {
+    color: styles.$text;
+    font-size: 1.0rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary {
+    background-color: styles.$primary;
+    border-color: styles.$primary;
+    border-radius: 8px;
+    &:hover {
+      background-color: styles.$primary-dark;
+      border-color: styles.$primary-dark;
+    }
+  }
+}

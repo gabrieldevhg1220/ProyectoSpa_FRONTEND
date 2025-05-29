@@ -1,0 +1,69 @@
+@use '../../../styles.scss' as styles;
+@use 'sass:color';
+
+.admin-dashboard {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: styles.$background;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.card {
+  background-color: styles.$neutral;
+  border-radius: 16px;
+  border: 1px solid styles.$border-shadow;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(styles.$border-shadow, 0.3);
+  }
+}
+
+.card-title {
+  color: styles.$accent;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+p {
+  color: styles.$text;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.btn-custom {
+  background-color: styles.$primary;
+  border-color: styles.$primary;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  min-width: 200px;
+  &:hover {
+    background-color: styles.$primary-dark;
+    border-color: styles.$primary-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-secondary-custom {
+  background-color: styles.$text;
+  border-color: styles.$text;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$text-dark;
+    border-color: styles.$text-dark;
+    transform: translateY(-2px);
+  }
+}

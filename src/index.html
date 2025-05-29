@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sentirse Bien Spa</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!-- Fuentes de Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9BTV9LgifHrZwkkCvxp0Noich_Zaivng&libraries=places"></script>
+  </head>
+  <body>
+    <app-root></app-root>
+    <!-- Script para inicializar el mapa -->
+    <script>
+      let map;
+      let marker;
+      let geocoder;
+      const initialLocation = { lat: -27.451019416674846, lng: -58.97902631796916 }; // Coordenadas para French 414, Resistencia, Chaco, Argentina
+
+      function initMap() {
+        // Verificar si el contenedor del mapa existe
+        const mapElement = document.getElementById("map");
+        if (!mapElement) return;
+
+        // Inicializar el mapa solo si no está inicializado
+        if (!map) {
+          map = new google.maps.Map(mapElement, {
+            center: initialLocation,
+            zoom: 15,
+          });
+
+          // Añadir un marcador en la ubicación inicial
+          marker = new google.maps.Marker({
+            position: initialLocation,
+            map: map,
+            title: "Sentirse Bien Spa",
+          });
+
+          // Inicializar el geocoder para búsqueda de direcciones
+          geocoder = new google.maps.Geocoder();
+
+          // Configurar la búsqueda de direcciones
+          const searchInput = document.getElementById("searchInput");
+          if (searchInput) {
+            const autocomplete = new google.maps.places.Autocomplete(searchInput);
+            autocomplete.bindTo("bounds", map);
+
+            autocomplete.addListener("place_changed", () => {
+              const place = autocomplete.getPlace();
+              if (!place.geometry) {
+                console.log("No se encontraron detalles para: ", place.name);
+                return;
+              }
+
+              // Centrar el mapa en la ubicación buscada
+              if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+              } else {
+                map.setCenter(place.geometry.location);
+                map.setZoom(15);
+              }
+
+              // Mover el marcador a la nueva ubicación
+              marker.setPosition(place.geometry.location);
+            });
+          }
+        } else {
+          // Si el mapa ya está inicializado, centrarlo y ajustar el marcador
+          map.setCenter(initialLocation);
+          map.setZoom(15);
+          marker.setPosition(initialLocation);
+        }
+      }
+
+      // Función para volver al punto original
+      function resetMap() {
+        if (map && marker) {
+          map.setCenter(initialLocation);
+          map.setZoom(15);
+          marker.setPosition(initialLocation);
+        }
+      }
+
+      // Inicializar el mapa al abrir el modal
+      document.addEventListener("shown.bs.modal", function (event) {
+        const modalId = event.target.id;
+        if (modalId === "contactModal") {
+          initMap();
+          // Forzar el renderizado del mapa
+          google.maps.event.trigger(map, "resize");
+        }
+      });
+
+      // Limpiar el mapa al cerrar el modal (opcional para liberar recursos)
+      document.addEventListener("hidden.bs.modal", function (event) {
+        const modalId = event.target.id;
+        if (modalId === "contactModal" && map) {
+          map = null;
+          marker = null;
+        }
+      });
+    </script>
+  </body>
+</html>
