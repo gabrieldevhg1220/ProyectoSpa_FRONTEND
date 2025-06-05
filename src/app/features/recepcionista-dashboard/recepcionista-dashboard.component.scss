@@ -31,6 +31,7 @@
   background-color: styles.$neutral;
   border-radius: 12px;
   overflow: hidden;
+  width: 100%; // Asegura que la tabla ocupe el ancho completo del contenedor
 }
 
 .table-header {
@@ -39,6 +40,7 @@
   th {
     padding: 15px;
     font-weight: 600;
+    text-align: left; // Alineación a la izquierda para consistencia
   }
 }
 
@@ -46,6 +48,8 @@
   padding: 15px;
   vertical-align: middle;
   color: styles.$text;
+  word-wrap: break-word; // Permite que el texto largo se divida
+  max-width: 0; // Permite que las celdas se ajusten al contenido
 }
 
 .table-hover tbody tr:hover {
@@ -58,6 +62,52 @@
   font-weight: 500;
 }
 
+/* Definir anchos específicos para las columnas */
+.table th:nth-child(1), .table td:nth-child(1) { /* ID */
+  width: 5%;
+  min-width: 50px;
+}
+.table th:nth-child(2), .table td:nth-child(2) { /* Cliente */
+  width: 15%;
+  min-width: 150px;
+}
+.table th:nth-child(3), .table td:nth-child(3) { /* DNI */
+  width: 10%;
+  min-width: 100px;
+}
+.table th:nth-child(4), .table td:nth-child(4) { /* Correo */
+  width: 15%;
+  min-width: 150px;
+}
+.table th:nth-child(5), .table td:nth-child(5) { /* Especialista */
+  width: 15%;
+  min-width: 150px;
+}
+.table th:nth-child(6), .table td:nth-child(6) { /* Fecha */
+  width: 15%;
+  min-width: 150px;
+}
+.table th:nth-child(7), .table td:nth-child(7) { /* Servicio */
+  width: 10%;
+  min-width: 100px;
+}
+.table th:nth-child(8), .table td:nth-child(8) { /* Estado */
+  width: 10%;
+  min-width: 100px;
+}
+.table th:nth-child(9), .table td:nth-child(9) { /* Acciones */
+  width: 15%;
+  min-width: 150px;
+}
+
+/* Ajustar el formato de las fechas para que no desborden */
+.table td:nth-child(6) { /* Fecha */
+  white-space: nowrap; // Evita que la fecha se divida
+  overflow: hidden; // Oculta el desbordamiento
+  text-overflow: ellipsis; // Añade "..." si el texto es demasiado largo
+}
+
+/* Estilos para los botones de acciones */
 .btn-custom {
   background-color: styles.$primary;
   border-color: styles.$primary;

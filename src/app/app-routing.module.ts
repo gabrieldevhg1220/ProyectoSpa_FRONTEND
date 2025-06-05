@@ -1,9 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
-import { AdminGuard } from './core/guards/admin.guard'; // Importar el guardia que crearemos
-import { RecepcionistaGuard } from './core/guards/recepcionista.guard'; // Importar el guardia que crearemos
+import { AdminGuard } from './core/guards/admin.guard';
+import { RecepcionistaGuard } from './core/guards/recepcionista.guard';
 import { ReservaComponent } from './reserva/reserva.component';
+import { GestionClientesComponent } from './gestion-clientes/gestion-clientes.component';
 
 const routes: Routes = [
   { path: '', loadChildren: () => import('./features/home/home.module').then(m => m.HomeModule) },
@@ -17,7 +18,8 @@ const routes: Routes = [
   { path: 'reserva', component: ReservaComponent },
   { path: 'nosotros', redirectTo: '/' },
   { path: 'contactos', redirectTo: '/' },
-  { path: '**', redirectTo: '' },
+  { path: 'gestion-clientes', component: GestionClientesComponent, canActivate: [AuthGuard, RecepcionistaGuard] }, // Mover esta ruta antes del comodín
+  { path: '**', redirectTo: '' }, // Comodín siempre al final
 ];
 
 @NgModule({

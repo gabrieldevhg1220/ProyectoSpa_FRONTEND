@@ -7,7 +7,6 @@ import { FacturaService } from '@core/services/factura.service';
 import { ClienteService } from '@core/services/cliente.service';
 import { ToastrService } from 'ngx-toastr';
 
-
 @Component({
   selector: 'app-reserva',
   standalone: false,
@@ -24,8 +23,8 @@ export class ReservaComponent implements OnInit {
   ultimaReserva: any = null;
   servicioDetails: { nombre: string, precio: number } | null = null;
   clienteData: any = null;
+  formularioDeshabilitado: boolean = false;
 
-  // Lista de servicios
   serviciosIndividuales = [
     {
       categoria: 'Masajes',
@@ -73,7 +72,6 @@ export class ReservaComponent implements OnInit {
     }
   ];
 
-  // Combinar todos los servicios en una lista plana para el <select>
   serviciosList: { nombre: string, enum: string }[] = [];
 
   constructor(
@@ -85,39 +83,31 @@ export class ReservaComponent implements OnInit {
     private facturaService: FacturaService,
     private clienteService: ClienteService,
     private toastr: ToastrService
-  ) {}
+  ) {
+    console.log('ReservaComponent inicializado');
+  }
 
   ngOnInit() {
-    // Cargar los servicios desde el backend
-    this.reservaService.getServicios().subscribe({
-      next: (servicios) => {
-        this.serviciosList = servicios;
-        this.toastr.success('Lista de servicios cargada correctamente.', 'Éxito');
-      },
-      error: (error) => {
-        console.error('Error al obtener servicios desde el backend:', error);
-        this.toastr.warning('No se pudieron cargar los servicios desde el servidor. Usando lista local como respaldo.', 'Advertencia');
-        // Fallback: Usar la lista estática si falla la solicitud al backend
-        this.serviciosList = [];
-        this.serviciosIndividuales.forEach(categoria => {
-          categoria.items.forEach(item => {
-            this.serviciosList.push({ nombre: item.nombre, enum: item.enum });
-          });
-        });
-        this.serviciosGrupales.forEach(categoria => {
-          categoria.items.forEach(item => {
-            this.serviciosList.push({ nombre: item.nombre, enum: item.enum });
-          });
-        });
-      }
-    });
+    console.log('ngOnInit ejecutado');
 
-    // Cargar el servicio desde los query params (si existe)
+    this.serviciosList = [];
+    this.serviciosIndividuales.forEach(categoria => {
+      categoria.items.forEach(item => {
+        this.serviciosList.push({ nombre: item.nombre, enum: item.enum });
+      });
+    });
+    this.serviciosGrupales.forEach(categoria => {
+      categoria.items.forEach(item => {
+        this.serviciosList.push({ nombre: item.nombre, enum: item.enum });
+      });
+    });
+    console.log('Servicios locales cargados:', this.serviciosList);
+
     this.route.queryParams.subscribe(params => {
       this.servicio = params['servicio'] || null;
+      console.log('Servicio desde queryParams:', this.servicio);
     });
 
-    // Verificar autenticación y obtener clienteId
     const clienteIdString = this.authService.getUserId();
     this.clienteId = clienteIdString ? parseInt(clienteIdString, 10) : null;
     if (!this.clienteId || !this.authService.isLoggedIn()) {
@@ -131,14 +121,16 @@ export class ReservaComponent implements OnInit {
       return;
     }
 
-    // Cargar la lista de empleados
     this.empleadoService.getEmpleadosForReservas().subscribe({
       next: (empleados) => {
-        this.empleadosDisponibles = empleados;
-        if (empleados.length > 0) {
+        // Filtrar empleados con roles no deseados
+        const rolesExcluidos = ['GERENTE_GENERAL', 'RECEPCIONISTA', 'COORDINADOR_AREA'];
+        this.empleadosDisponibles = empleados.filter(empleado => !rolesExcluidos.includes(empleado.rol));
+        console.log('Empleados disponibles filtrados:', this.empleadosDisponibles);
+        if (this.empleadosDisponibles.length > 0) {
           this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
         } else {
-          this.toastr.info('No hay empleados disponibles en este momento.', 'Información');
+          this.toastr.info('No hay especialistas disponibles en este momento.', 'Información');
         }
       },
       error: (error) => {
@@ -148,15 +140,34 @@ export class ReservaComponent implements OnInit {
     });
   }
 
-  // Método para obtener el nombre y precio del servicio basado en el enum
+  // Método para simplificar los roles para la vista del cliente
+  simplificarRol(rol: string): string {
+    switch (rol) {
+      case 'ESTETICISTA':
+        return 'Esteticista';
+      case 'TECNICO_ESTETICA_AVANZADA':
+        return 'Estetica Avanzada';
+      case 'ESPECIALISTA_CUIDADO_UNAS':
+        return 'Cuidado de Uñas';
+      case 'MASAJISTA_TERAPEUTICO':
+        return 'Masjista Terapeutico';
+      case 'TERAPEUTA_SPA':
+        return 'Terapeuta en Spa';
+      case 'INSTRUCTOR_YOGA':
+        return 'Instructor/a de Yoga';
+      case 'NUTRICIONISTA':
+        return 'Nutricionista';
+      default:
+        return rol; // En caso de que el rol no esté mapeado
+    }
+  }
+
   private getServicioDetails(servicioEnum: string): { nombre: string, precio: number } | null {
     let servicioItem = null;
-    // Buscar en servicios individuales
     for (const categoria of this.serviciosIndividuales) {
       servicioItem = categoria.items.find(item => item.enum === servicioEnum);
       if (servicioItem) break;
     }
-    // Si no se encuentra, buscar en servicios grupales
     if (!servicioItem) {
       for (const categoria of this.serviciosGrupales) {
         servicioItem = categoria.items.find(item => item.enum === servicioEnum);
@@ -166,9 +177,36 @@ export class ReservaComponent implements OnInit {
     return servicioItem ? { nombre: servicioItem.nombre, precio: servicioItem.precio } : null;
   }
 
+  onServicioChange(newValue: string | null) {
+    this.servicio = newValue;
+    console.log('Servicio seleccionado:', this.servicio);
+  }
+
+  onEmpleadoChange(newValue: number | null) {
+    this.empleadoId = newValue;
+    console.log('Empleado seleccionado:', this.empleadoId);
+  }
+
+  isFormValid(): boolean {
+    console.log('Validando formulario - fechaReserva:', this.fechaReserva, 'empleadoId:', this.empleadoId, 'servicio:', this.servicio, 'empleadosDisponibles.length:', this.empleadosDisponibles.length);
+    const isFechaReservaValid = this.fechaReserva.trim().length > 0;
+    const isEmpleadoIdValid = this.empleadoId !== null && this.empleadoId > 0;
+    const isServicioValid = this.servicio !== null && this.servicio.trim().length > 0;
+    const isEmpleadosAvailable = this.empleadosDisponibles.length > 0;
+    const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable;
+    console.log('Validación resultado:', isValid);
+    return isValid;
+  }
+
   hacerReserva() {
-    if (!this.fechaReserva || !this.empleadoId || !this.clienteId || !this.servicio) {
+    console.log('Ejecutando hacerReserva()');
+    if (!this.isFormValid()) {
       this.toastr.warning('Por favor, completa todos los campos requeridos.', 'Advertencia');
+      return;
+    }
+
+    if (this.formularioDeshabilitado) {
+      console.log('Formulario deshabilitado, no se creará otra reserva');
       return;
     }
 
@@ -183,9 +221,9 @@ export class ReservaComponent implements OnInit {
     this.reservaService.createReserva(reserva).subscribe({
       next: (response) => {
         this.toastr.success('Reserva creada exitosamente.', 'Éxito');
-        this.ultimaReserva = reserva; // Almacenar la reserva creada
+        this.ultimaReserva = response;
+        this.formularioDeshabilitado = true;
 
-        // Obtener detalles del servicio
         this.servicioDetails = this.getServicioDetails(this.servicio!);
         if (!this.servicioDetails) {
           this.toastr.error('No se encontraron los detalles del servicio para generar la factura.', 'Error');
@@ -193,7 +231,6 @@ export class ReservaComponent implements OnInit {
           return;
         }
 
-        // Obtener datos del cliente
         this.clienteService.getClienteByToken().subscribe({
           next: (clienteData) => {
             this.clienteData = {
@@ -202,7 +239,7 @@ export class ReservaComponent implements OnInit {
               dni: clienteData.dni || 'N/A',
               email: clienteData.email || 'N/A'
             };
-            this.reservaCreada = true; // Mostrar el botón de generar factura
+            this.reservaCreada = true;
           },
           error: (error) => {
             this.toastr.error('Error al obtener los datos del cliente para la factura.', 'Error');
@@ -218,6 +255,7 @@ export class ReservaComponent implements OnInit {
   }
 
   generarFactura() {
+    console.log('Ejecutando generarFactura()');
     if (!this.ultimaReserva || !this.servicioDetails || !this.clienteData) {
       this.toastr.error('No hay datos suficientes para generar la factura.', 'Error');
       return;

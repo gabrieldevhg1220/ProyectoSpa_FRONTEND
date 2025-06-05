@@ -36,7 +36,8 @@ export class RecepcionistaDashboardComponent implements OnInit {
   serviciosList: Servicio[] = [];
   showNewReservationButton: boolean = false;
   showGenerateInvoiceButton: boolean = false;
-  filterRole: string = ''; // Filtro por rol
+  filterEspecialista: string = ''; // Nuevo filtro por nombre del especialista
+  filterDni: string = ''; // Nuevo filtro por DNI del cliente
 
   // Mapeo estático para convertir enums a nombres y precios
   private servicioMap: { [key: string]: { nombre: string; precio: number } } = {
@@ -160,16 +161,29 @@ export class RecepcionistaDashboardComponent implements OnInit {
     });
   }
 
-  // Método para aplicar el filtro por rol
+  // Método para aplicar los filtros
   applyFilters(): void {
-    if (!this.filterRole) {
-      this.filteredReservas = [...this.reservas]; // Mostrar todas las reservas si no hay filtro
-    } else {
-      this.filteredReservas = this.reservas.filter(reserva => {
-        const employeeRole = reserva.empleado.rol.replace('ROLE_', ''); // Eliminar prefijo ROLE_
-        return employeeRole === this.filterRole;
-      });
-    }
+    this.filteredReservas = this.reservas.filter(reserva => {
+      // Filtro por nombre del especialista
+      const especialistaMatch = !this.filterEspecialista || 
+        `${reserva.empleado.nombre} ${reserva.empleado.apellido}`
+          .toLowerCase()
+          .includes(this.filterEspecialista.toLowerCase());
+
+      // Filtro por DNI del cliente
+      const dniMatch = !this.filterDni || 
+        reserva.cliente.dni.toLowerCase().includes(this.filterDni.toLowerCase());
+
+      // Combinar ambos filtros
+      return especialistaMatch && dniMatch;
+    });
+  }
+
+  // Método para limpiar los filtros y recargar las reservas
+  clearFilters(): void {
+    this.filterEspecialista = '';
+    this.filterDni = '';
+    this.loadReservas(); // Recarga la lista de reservas
   }
 
   createReserva(): void {

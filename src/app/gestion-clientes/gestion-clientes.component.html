@@ -1,0 +1,137 @@
+<div class="container my-5">
+  <h2 class="mb-5 text-center">Gestión de Clientes</h2>
+
+  <!-- Botón para Agregar Cliente -->
+  <div class="d-flex justify-content-start mb-4 gap-2">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClienteModal">Agregar Cliente</button>
+    <a routerLink="/dashboard/recepcionista" class="btn btn-secondary">Atrás</a>
+  </div>
+
+  <!-- Lista de Clientes -->
+  <div class="card shadow-lg border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-header">
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>DNI</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th class="actions-column">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cliente of clientes">
+              <td>{{ cliente.id }}</td>
+              <td>{{ cliente.nombre }}</td>
+              <td>{{ cliente.apellido }}</td>
+              <td>{{ cliente.dni }}</td>
+              <td>{{ cliente.email }}</td>
+              <td>{{ cliente.telefono || 'N/A' }}</td>
+              <td class="actions-column">
+                <div class="action-buttons">
+                  <button class="btn btn-sm btn-warning-custom" (click)="editCliente(cliente)" data-bs-toggle="modal" data-bs-target="#editClienteModal">Editar</button>
+                  <button class="btn btn-sm btn-danger-custom" (click)="deleteCliente(cliente.id)">Eliminar</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="clientes.length === 0">
+              <td colspan="7" class="text-center">No hay clientes disponibles.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Agregar Cliente -->
+  <div class="modal fade" id="addClienteModal" tabindex="-1" aria-labelledby="addClienteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addClienteModalLabel">Agregar Cliente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="createCliente()">
+            <div class="mb-4">
+              <label for="newNombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="newNombre" [(ngModel)]="newCliente.nombre" name="newNombre" required>
+            </div>
+            <div class="mb-4">
+              <label for="newApellido" class="form-label">Apellido</label>
+              <input type="text" class="form-control" id="newApellido" [(ngModel)]="newCliente.apellido" name="newApellido" required>
+            </div>
+            <div class="mb-4">
+              <label for="newDni" class="form-label">DNI</label>
+              <input type="text" class="form-control" id="newDni" [(ngModel)]="newCliente.dni" name="newDni" required>
+            </div>
+            <div class="mb-4">
+              <label for="newEmail" class="form-label">Correo</label>
+              <input type="email" class="form-control" id="newEmail" [(ngModel)]="newCliente.email" name="newEmail" required>
+            </div>
+            <div class="mb-4">
+              <label for="newTelefono" class="form-label">Teléfono</label>
+              <input type="text" class="form-control" id="newTelefono" [(ngModel)]="newCliente.telefono" name="newTelefono">
+            </div>
+            <div class="mb-4">
+              <label for="newPassword" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="newPassword" [(ngModel)]="newCliente.password" name="newPassword" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Agregar Cliente</button>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Editar Cliente -->
+  <div class="modal fade" id="editClienteModal" tabindex="-1" aria-labelledby="editClienteModalLabel" aria-hidden="true" *ngIf="editingCliente">
+    <div class="modal-dialog">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editClienteModalLabel">Editar Cliente</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="updateCliente()">
+            <div class="mb-4">
+              <label for="editNombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="editNombre" [(ngModel)]="editingCliente.nombre" name="editNombre" required>
+            </div>
+            <div class="mb-4">
+              <label for="editApellido" class="form-label">Apellido</label>
+              <input type="text" class="form-control" id="editApellido" [(ngModel)]="editingCliente.apellido" name="editApellido" required>
+            </div>
+            <div class="mb-4">
+              <label for="editDni" class="form-label">DNI</label>
+              <input type="text" class="form-control" id="editDni" [(ngModel)]="editingCliente.dni" name="editDni" required>
+            </div>
+            <div class="mb-4">
+              <label for="editEmail" class="form-label">Correo</label>
+              <input type="email" class="form-control" id="editEmail" [(ngModel)]="editingCliente.email" name="editEmail" required>
+            </div>
+            <div class="mb-4">
+              <label for="editTelefono" class="form-label">Teléfono</label>
+              <input type="text" class="form-control" id="editTelefono" [(ngModel)]="editingCliente.telefono" name="editTelefono">
+            </div>
+            <div class="mb-4">
+              <label for="editPassword" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
+              <input type="password" class="form-control" id="editPassword" [(ngModel)]="editingCliente.password" name="editPassword">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Actualizar Cliente</button>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

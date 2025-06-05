@@ -1,6 +1,11 @@
 <div class="container my-5">
   <h2 class="mb-5 text-center">Área de Trabajo del Recepcionista</h2>
 
+  <!-- Botón para Gestionar Clientes -->
+  <div class="d-flex justify-content-start mb-4">
+    <a routerLink="/gestion-clientes" class="btn btn-primary">Gestionar Clientes</a>
+  </div>
+
   <!-- Formulario para Crear Reserva -->
   <div class="card shadow-lg border-0 mb-5">
     <div class="card-body p-5">
@@ -56,11 +61,15 @@
       <h5 class="card-title mb-4">Filtros</h5>
       <div class="row">
         <div class="col-md-4 mb-4">
-          <label for="filterRole" class="form-label">Filtrar por Rol del Especialista</label>
-          <select class="form-select" id="filterRole" [(ngModel)]="filterRole" (ngModelChange)="applyFilters()" name="filterRole">
-            <option value="">Todos los Roles</option>
-            <option *ngFor="let empleado of empleados" [value]="empleado.rol.replace('ROLE_', '')">{{ empleado.rol.replace('ROLE_', '') }}</option>
-          </select>
+          <label for="filterEspecialista" class="form-label">Buscar por Nombre del Especialista</label>
+          <input type="text" class="form-control" id="filterEspecialista" [(ngModel)]="filterEspecialista" (ngModelChange)="applyFilters()" name="filterEspecialista" placeholder="Ej. Juan Pérez">
+        </div>
+        <div class="col-md-4 mb-4">
+          <label for="filterDni" class="form-label">Buscar por DNI del Cliente</label>
+          <input type="text" class="form-control" id="filterDni" [(ngModel)]="filterDni" (ngModelChange)="applyFilters()" name="filterDni" placeholder="Ej. 12345678">
+        </div>
+        <div class="col-md-4 mb-4 d-flex align-items-end">
+          <button class="btn btn-secondary" (click)="clearFilters()">Limpiar Filtro</button>
         </div>
       </div>
     </div>
@@ -76,6 +85,7 @@
             <tr>
               <th>ID</th>
               <th>Cliente</th>
+              <th>DNI</th>
               <th>Correo</th>
               <th>Especialista</th>
               <th>Fecha</th>
@@ -88,6 +98,7 @@
             <tr *ngFor="let reserva of filteredReservas">
               <td>{{ reserva.id }}</td>
               <td>{{ reserva.cliente.nombre }} {{ reserva.cliente.apellido }}</td>
+              <td>{{ reserva.cliente.dni }}</td>
               <td>{{ reserva.cliente.email }}</td>
               <td>{{ reserva.empleado.nombre }} {{ reserva.empleado.apellido }} ({{ reserva.empleado.rol }})</td>
               <td>{{ reserva.fechaReserva | date:'medium' }}</td>
@@ -108,7 +119,7 @@
               </td>
             </tr>
             <tr *ngIf="filteredReservas.length === 0">
-              <td colspan="8" class="text-center">No hay reservas disponibles.</td>
+              <td colspan="9" class="text-center">No hay reservas disponibles.</td>
             </tr>
           </tbody>
         </table>

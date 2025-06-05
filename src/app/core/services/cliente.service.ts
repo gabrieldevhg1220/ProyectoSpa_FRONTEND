@@ -13,7 +13,6 @@ export class ClienteService {
   private apiUrl = `${environment.apiUrl}/api/admin/clientes`;
   private recepcionistaApiUrl = `${environment.apiUrl}/api/recepcionista/clientes`;
   private clienteApiUrl = `${environment.apiUrl}/api/clientes`;
-  private clientesCache: Cliente[] = [];
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
@@ -93,7 +92,9 @@ export class ClienteService {
   }
 
   createCliente(cliente: Cliente): Observable<Cliente> {
-    return this.http.post<Cliente>(this.apiUrl, cliente, { headers: this.getHeaders() }).pipe(
+    const url = this.authService.isRecepcionista() ? this.recepcionistaApiUrl : this.apiUrl;
+    console.log('URL usada para createCliente:', url);
+    return this.http.post<Cliente>(url, cliente, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error al crear cliente:', {
           status: error.status,
@@ -117,7 +118,9 @@ export class ClienteService {
   }
 
   updateCliente(id: number, cliente: Cliente): Observable<Cliente> {
-    return this.http.put<Cliente>(`${this.apiUrl}/${id}`, cliente, { headers: this.getHeaders() }).pipe(
+    const url = this.authService.isRecepcionista() ? `${this.recepcionistaApiUrl}/${id}` : `${this.apiUrl}/${id}`;
+    console.log('URL usada para updateCliente:', url);
+    return this.http.put<Cliente>(url, cliente, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error al actualizar cliente:', {
           status: error.status,
@@ -141,7 +144,9 @@ export class ClienteService {
   }
 
   deleteCliente(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
+    const url = this.authService.isRecepcionista() ? `${this.recepcionistaApiUrl}/${id}` : `${this.apiUrl}/${id}`;
+    console.log('URL usada para deleteCliente:', url);
+    return this.http.delete<void>(url, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error al eliminar cliente:', {
           status: error.status,
