@@ -1,0 +1,33 @@
+@use '../../styles.scss' as styles;
+
+.container {
+  max-width: 800px;
+}
+
+.card {
+  background-color: styles.$neutral;
+  border-radius: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(styles.$border-shadow, 0.3);
+  }
+}
+
+.card-title {
+  color: styles.$accent;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.reservation-form {
+  label {
+    font-weight: 500;
+    color: styles.$text;
+  }
+}
+
+.btn-primary, .btn-accent {
+  min-width: 150px;
+  font-size: 1.1rem;
+}

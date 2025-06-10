@@ -1,0 +1,59 @@
+@use '../../../styles.scss' as styles;
+@use 'sass:color';
+
+.login-container {
+  background-color: styles.$secondary; // Linen
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 400px;
+  margin: 50px auto;
+  box-shadow: 0 4px 8px rgba(188, 143, 143, 0.2); // Rosy Brown shadow
+  border: 1px solid styles.$border-shadow; // Rosy Brown
+}
+
+.title {
+  color: styles.$accent; // Lavender
+  font-family: 'Lora', serif;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.text-dark {
+  color: styles.$text; // Dark Gray
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-control {
+  border-color: styles.$border-shadow; // Rosy Brown
+  &:focus {
+    border-color: styles.$accent; // Lavender
+    box-shadow: 0 0 5px rgba(230, 230, 250, 0.5); // Lavender shadow
+  }
+}
+
+.btn-custom {
+  background-color: styles.$primary; // Medium Aquamarine
+  border-color: styles.$primary;
+  color: #fff;
+  width: 100%;
+  padding: 10px;
+  &:hover {
+    background-color: color.adjust(styles.$primary, $lightness: -10%);
+    border-color: color.adjust(styles.$primary, $lightness: -10%);
+  }
+  &:disabled {
+    background-color: color.adjust(styles.$primary, $lightness: 20%);
+    border-color: color.adjust(styles.$primary, $lightness: 20%);
+    cursor: not-allowed;
+  }
+}
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: center;
+}

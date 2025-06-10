@@ -1,0 +1,62 @@
+@use '../../../styles.scss' as styles;
+@use 'sass:color';
+
+.container {
+  background-color: styles.$secondary; // Linen
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.title {
+  color: styles.$accent; // Lavender
+  font-family: 'Lora', serif;
+}
+
+.subtitle {
+  color: styles.$accent; // Lavender
+  font-family: 'Lora', serif;
+}
+
+.text-dark {
+  color: styles.$text; // Dark Gray
+}
+
+.card {
+  background-color: styles.$neutral; // Mint Cream
+  border: none;
+  box-shadow: 0 4px 8px rgba(188, 143, 143, 0.2); // Rosy Brown shadow
+}
+
+.card-border {
+  border: 1px solid styles.$border-shadow; // Rosy Brown
+}
+
+.form-control {
+  border-color: styles.$border-shadow; // Rosy Brown
+  &:focus {
+    border-color: styles.$accent; // Lavender
+    box-shadow: 0 0 5px rgba(230, 230, 250, 0.5); // Lavender shadow
+  }
+}
+
+.btn-custom {
+  background-color: styles.$primary; // Medium Aquamarine
+  border-color: styles.$primary;
+  color: #fff;
+  &:hover {
+    background-color: color.adjust(styles.$primary, $lightness: -10%);
+    border-color: color.adjust(styles.$primary, $lightness: -10%);
+  }
+}
+
+.table {
+  th, td {
+    color: styles.$text; // Dark Gray
+  }
+}
+
+.alert-info {
+  background-color: styles.$background; // Ivory
+  border-color: styles.$border-shadow; // Rosy Brown
+  color: styles.$text; // Dark Gray
+}

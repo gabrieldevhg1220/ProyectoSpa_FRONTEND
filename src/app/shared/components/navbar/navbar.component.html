@@ -1,0 +1,234 @@
+<nav class="navbar navbar-expand-lg navbar-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <img src="assets/images/logo.png" alt="Sentirse Bien" width="50">
+      Sentirse Bien
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">Nosotros</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#contactModal">Contactos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#serviciosModal">Servicios</a>
+        </li>
+        <!-- Enlace para Clientes -->
+        <li class="nav-item" *ngIf="(isLoggedIn$ | async) && !authService.isGerenteGeneral() && !authService.isRecepcionista() && !authService.isProfesional()">
+          <a class="nav-link" routerLink="/reserva" routerLinkActive="active">Reserva</a>
+        </li>
+        <!-- Enlace para Profesionales -->
+        <li class="nav-item" *ngIf="(isLoggedIn$ | async) && authService.isProfesional()">
+          <a class="nav-link profesional-link" routerLink="/dashboard/profesional" routerLinkActive="active">Área de Trabajo</a>
+        </li>
+        <!-- Enlace para Administradores -->
+        <li class="nav-item" *ngIf="(isLoggedIn$ | async) && authService.isGerenteGeneral()">
+          <a class="nav-link admin-link" routerLink="/dashboard/admin" routerLinkActive="active">
+            <i class="fas fa-user-shield me-1"></i>Administración
+          </a>
+        </li>
+        <!-- Enlace para Recepcionista -->
+        <li class="nav-item" *ngIf="(isLoggedIn$ | async) && authService.isRecepcionista()">
+          <a class="nav-link recepcionista-link" routerLink="/dashboard/recepcionista" routerLinkActive="active">Recepcionista</a>
+        </li> 
+        <!-- Enlace para Login-->
+        <li class="nav-item" *ngIf="!(isLoggedIn$ | async)">
+          <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+        </li>
+        <!-- Enlace para Registrarse -->
+        <li class="nav-item" *ngIf="!(isLoggedIn$ | async)">
+          <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#registerModal">Registrarse</button>
+        </li>
+        <li class="nav-item" *ngIf="(isLoggedIn$ | async)">
+          <button class="btn btn-accent" (click)="logout()">Logout</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Modal para Nosotros -->
+  <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="aboutModalLabel">Sobre Sentirse Bien</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>En Sentirse Bien, nos dedicamos a ofrecer un refugio de paz y bienestar en el corazón de Resistencia, Chaco. Nuestro objetivo es que cada visita sea una experiencia rejuvenecedora para tu cuerpo y mente. Contamos con un equipo de profesionales apasionados que brindan servicios personalizados, desde masajes relajantes hasta tratamientos faciales y corporales de alta calidad.</p>
+          <p>Fundado en 2021 por la de la Dra. Ana Felicidad, Sentirse Bien se ha convertido en un lugar favorito para quienes buscan desconectar del estrés diario y reconectar consigo mismos. Utilizamos productos naturales y técnicas avanzadas para garantizar resultados excepcionales en un ambiente sereno y acogedor.</p>
+          <p>¡Te invitamos a visitarnos y descubrir el poder de la relajación!</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Contactos -->
+  <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="contactModalLabel">Contáctanos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Teléfono:</strong> (362) 456-7890</p>
+          <p><strong>Dirección:</strong> French 414, Resistencia, Chaco, Argentina</p>
+          <p><strong>Redes Sociales:</strong></p>
+          <p>
+            <a href="https://facebook.com/sentirsebien" class="social-link" target="_blank"><i class="fab fa-facebook-f me-1"></i></a> |
+            <a href="https://instagram.com/sentirsebien" class="social-link" target="_blank"><i class="fab fa-instagram me-1"></i></a> |
+            <a href="https://x.com/sentirsebien" class="social-link" target="_blank"><i class="fab fa-x-twitter me-1"></i></a>
+          </p>
+          <div class="map-container">
+            <div id="map" style="height: 300px; width: 100%;"></div>
+            <div class="map-controls mt-3">
+              <input type="text" id="searchInput" class="form-control mb-2" placeholder="Buscar dirección...">
+              <button class="btn btn-primary" onclick="resetMap()">Volver al Punto Original</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Servicios -->
+  <div class="modal fade" id="serviciosModal" tabindex="-1" aria-labelledby="serviciosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl custom-modal-size">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="serviciosModalLabel">Nuestros Servicios</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Servicios Individuales -->
+          <h2 class="mb-3">Servicios Individuales</h2>
+          <div *ngFor="let categoria of serviciosIndividuales">
+            <h3 class="mb-3">{{ categoria.categoria }}</h3>
+            <div class="row">
+              <div *ngFor="let servicio of categoria.items" class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                  <img [src]="servicio.imagen" class="card-img-top" alt="{{ servicio.nombre }}" style="height: 200px; object-fit: cover;">
+                  <div class="card-body">
+                    <h5 class="card-title">{{ servicio.nombre }}</h5>
+                    <p class="card-text">{{ servicio.descripcion }}</p>
+                    <p class="card-text"><strong>Precio:</strong> ${{ servicio.precio }}</p>
+                    <button class="btn btn-primary w-100" (click)="reservar(servicio.enum)">Reservar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Servicios Grupales -->
+          <h2 class="mb-3 mt-5"></h2>
+          <div *ngFor="let categoria of serviciosGrupales">
+            <h3 class="mb-3">{{ categoria.categoria }}</h3>
+            <div class="row">
+              <div *ngFor="let servicio of categoria.items" class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                  <img [src]="servicio.imagen" class="card-img-top" alt="{{ servicio.nombre }}" style="height: 200px; object-fit: cover;">
+                  <div class="card-body">
+                    <h5 class="card-title">{{ servicio.nombre }}</h5>
+                    <p class="card-text">{{ servicio.descripcion }}</p>
+                    <p class="card-text"><strong>Precio:</strong> ${{ servicio.precio }}</p>
+                    <button class="btn btn-primary w-100" (click)="reservar(servicio.enum)">Reservar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Login -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+            <div class="mb-3">
+              <label for="email" class="form-label">Correo Electrónico</label>
+              <input type="email" class="form-control" id="email" name="email" [(ngModel)]="loginData.email" required email>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="password" name="password" [(ngModel)]="loginData.password" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary w-100" [disabled]="!loginForm.valid">Iniciar Sesión</button>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Registro -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="registerModalLabel">Registrarse</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="onRegister()" #registerForm="ngForm">
+            <div class="mb-3">
+              <label for="dni" class="form-label">DNI</label>
+              <input type="text" class="form-control" id="dni" name="dni" [(ngModel)]="registerData.dni" required pattern="[0-9]+" title="El DNI debe contener solo números">
+            </div>
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="nombre" name="nombre" [(ngModel)]="registerData.nombre" required>
+            </div>
+            <div class="mb-3">
+              <label for="apellido" class="form-label">Apellido</label>
+              <input type="text" class="form-control" id="apellido" name="apellido" [(ngModel)]="registerData.apellido" required>
+            </div>
+            <div class="mb-3">
+              <label for="registerEmail" class="form-label">Correo Electrónico</label>
+              <input type="email" class="form-control" id="registerEmail" name="email" [(ngModel)]="registerData.email" required email>
+            </div>
+            <div class="mb-3">
+              <label for="registerPassword" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="registerPassword" name="password" [(ngModel)]="registerData.password" required minlength="6">
+            </div>
+            <div class="mb-3">
+              <label for="telefono" class="form-label">Teléfono</label>
+              <input type="tel" class="form-control" id="telefono" name="telefono" [(ngModel)]="registerData.telefono" required pattern="[0-9]+" title="El teléfono debe contener solo números">
+            </div>
+            <button type="submit" class="btn btn-primary w-100" [disabled]="!registerForm.valid">Registrarse</button>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

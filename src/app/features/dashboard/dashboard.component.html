@@ -1,0 +1,55 @@
+<div class="container my-5">
+  <h1 class="text-center mb-4 title">Realizar Reserva</h1>
+
+  <!-- Formulario para crear una nueva reserva -->
+  <div class="card shadow-sm p-4 mb-5 card-border">
+    <h3 class="mb-3 subtitle">Crear Nueva Reserva</h3>
+    <form>
+      <div class="mb-3">
+        <label for="servicio" class="form-label text-dark">Servicio</label>
+        <select class="form-control" id="servicio" [(ngModel)]="nuevaReserva.servicio" name="servicio" required>
+          <option value="" disabled>Selecciona un servicio</option>
+          <option *ngFor="let servicio of servicios" [value]="servicio">{{ servicio }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="fechaReserva" class="form-label text-dark">Fecha y Hora</label>
+        <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="nuevaReserva.fechaReserva" name="fechaReserva" required>
+      </div>
+      <div class="mb-3">
+        <label for="empleado" class="form-label text-dark">Seleccionar Empleado</label>
+        <select class="form-control" id="empleado" [(ngModel)]="selectedEmpleadoId" name="empleado" required>
+          <option value="" disabled>Selecciona un empleado</option>
+          <option *ngFor="let empleado of empleados" [value]="empleado.id">{{ empleado.nombre }} {{ empleado.apellido }} ({{ getReadableRole(empleado.rol) }})</option>
+        </select>
+      </div>
+      <button type="button" class="btn btn-primary btn-custom" (click)="createReserva()">Crear Reserva</button>
+    </form>
+  </div>
+
+  <!-- Lista de reservas -->
+  <h3 class="mb-3 subtitle">Mis Reservas</h3>
+  <div class="card shadow-sm p-4 card-border">
+    <div *ngIf="reservas.length === 0" class="alert alert-info">
+      No tienes reservas registradas.
+    </div>
+    <div *ngIf="reservas.length > 0">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th class="text-dark">Servicio</th>
+            <th class="text-dark">Fecha y Hora</th>
+            <th class="text-dark">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let reserva of reservas">
+            <td class="text-dark">{{ reserva.servicio }}</td>
+            <td class="text-dark">{{ reserva.fechaReserva | date:'medium' }}</td>
+            <td class="text-dark">{{ reserva.status || 'PENDIENTE' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

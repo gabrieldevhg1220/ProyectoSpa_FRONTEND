@@ -1,0 +1,208 @@
+@use '../../../styles.scss' as styles;
+
+.container {
+  max-width: 1400px;
+}
+
+.card {
+  background-color: styles.$neutral;
+  border-radius: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(styles.$border-shadow, 0.3);
+  }
+}
+
+.card-title {
+  color: styles.$accent;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.reservation-form {
+  label {
+    font-weight: 500;
+    color: styles.$text;
+  }
+}
+
+.table {
+  background-color: styles.$neutral;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.table-header {
+  background-color: styles.$primary;
+  color: #fff;
+  th {
+    padding: 15px;
+    font-weight: 600;
+    text-align: left;
+  }
+}
+
+.table td {
+  padding: 15px;
+  vertical-align: middle;
+  color: styles.$text;
+  word-wrap: break-word;
+  max-width: 0;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(styles.$secondary, 0.5);
+}
+
+.badge {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  display: inline-block;
+  min-width: 100px; // Asegurar un ancho mínimo
+  text-align: center;
+  white-space: nowrap; // Evitar que el texto se divida
+}
+
+/* Definir anchos específicos para las columnas */
+.table th:nth-child(1), .table td:nth-child(1) { /* ID */
+  width: 3%;
+  min-width: 40px;
+}
+.table th:nth-child(2), .table td:nth-child(2) { /* Cliente */
+  width: 15%;
+  min-width: 150px;
+}
+.table th:nth-child(3), .table td:nth-child(3) { /* DNI */
+  width: 10%;
+  min-width: 100px;
+}
+.table th:nth-child(4), .table td:nth-child(4) { /* Correo */
+  width: 15%;
+  min-width: 150px;
+}
+.table th:nth-child(5), .table td:nth-child(5) { /* Especialista */
+  width: 15%;
+  min-width: 150px;
+}
+.table th:nth-child(6), .table td:nth-child(6) { /* Fecha */
+  width: 20%;
+  min-width: 200px;
+}
+.table th:nth-child(7), .table td:nth-child(7) { /* Servicio */
+  width: 10%;
+  min-width: 100px;
+}
+.table th:nth-child(8), .table td:nth-child(8) { /* Estado */
+  width: 7%;
+  min-width: 120px; // Alineado con el HTML
+}
+.table th:nth-child(9), .table td:nth-child(9) { /* Acciones */
+  width: 15%;
+  min-width: 180px; // Alineado con el HTML
+}
+
+/* Ajustar el formato de las fechas para que no desborden */
+.table td:nth-child(6) { /* Fecha */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-custom {
+  background-color: styles.$primary;
+  border-color: styles.$primary;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$primary-dark;
+    border-color: styles.$primary-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-secondary-custom {
+  background-color: styles.$text;
+  border-color: styles.$text;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$text-dark;
+    border-color: styles.$text-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-warning-custom {
+  background-color: styles.$warning;
+  border-color: styles.$warning;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$warning-dark;
+    border-color: styles.$warning-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-danger-custom {
+  background-color: styles.$danger;
+  border-color: styles.$danger;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$danger-dark;
+    border-color: styles.$danger-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.btn-success {
+  background-color: styles.$success;
+  border-color: styles.$success;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  &:hover {
+    background-color: styles.$success-dark;
+    border-color: styles.$success-dark;
+    transform: translateY(-2px);
+  }
+}
+
+.modal-content {
+  background-color: styles.$neutral;
+  border-radius: 16px;
+}
+
+.modal-header,
+.modal-footer {
+  border-color: styles.$border-shadow;
+  background-color: styles.$neutral;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+  align-items: center;
+  justify-content: center;
+
+  button {
+    min-width: 70px; // Asegurar un ancho mínimo para los botones
+    padding: 5px 10px;
+  }
+}

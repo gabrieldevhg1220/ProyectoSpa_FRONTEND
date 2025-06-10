@@ -1,0 +1,15 @@
+<div class="admin-dashboard container mt-5">
+  <h2 class="card-title text-center mb-4">Dashboard de Administración</h2>
+  <p class="text-center">Bienvenido/a, {{ userName || userRole || 'Administrador' }}</p>
+  <div class="admin-options card shadow-sm">
+    <div class="card-body">
+      <h3 class="card-title">Opciones de Administración</h3>
+      <div class="d-flex flex-wrap justify-content-center gap-3">
+        <button class="btn btn-primary btn-custom" [routerLink]="['/admin/clientes']">Gestionar Clientes</button>
+        <button class="btn btn-primary btn-custom" [routerLink]="['/admin/empleados']">Gestionar Empleados</button>
+        <button class="btn btn-primary btn-custom" [routerLink]="['/admin/reservas']">Gestionar Reservas</button>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-secondary-custom mt-4" (click)="logout()">Cerrar Sesión</button>
+</div>

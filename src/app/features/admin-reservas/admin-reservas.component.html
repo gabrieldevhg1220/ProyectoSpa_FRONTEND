@@ -1,0 +1,170 @@
+<div class="container">
+  <h1 class="card-title text-center mb-4">Gestionar Reservas</h1>
+
+  <!-- Formulario para Crear Reserva -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Agregar Nueva Reserva</h5>
+      <form (ngSubmit)="createReserva()">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="cliente" class="form-label">Cliente</label>
+            <select class="form-select" id="cliente" [(ngModel)]="selectedClienteId" name="cliente" required>
+              <option value="" disabled selected>Selecciona un cliente</option>
+              <option *ngFor="let cliente of clientes" [value]="cliente.id">{{ cliente.nombre }} {{ cliente.apellido }}</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="empleado" class="form-label">Empleado</label>
+            <select class="form-select" id="empleado" [(ngModel)]="selectedEmpleadoId" name="empleado" required>
+              <option value="" disabled selected>Selecciona un empleado</option>
+              <option *ngFor="let empleado of empleados" [value]="empleado.id">{{ empleado.nombre }} {{ empleado.apellido }} ({{ empleado.rol }})</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="fechaReserva" class="form-label">Fecha y Hora</label>
+            <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="newReserva.fechaReserva" name="fechaReserva" required [min]="getMinDate()">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="servicio" class="form-label">Servicio</label>
+            <select class="form-select" id="servicio" [(ngModel)]="newReserva.servicio" name="servicio" required>
+              <option value="" disabled selected>Selecciona un servicio</option>
+              <option *ngFor="let servicio of servicios" [value]="servicio.enum">{{ servicio.nombre }}</option>
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="status" class="form-label">Estado</label>
+            <select class="form-select" id="status" [(ngModel)]="newReserva.status" name="status" required>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="CONFIRMADA">Confirmada</option>
+              <option value="CANCELADA">Cancelada</option>
+              <option value="COMPLETADA">Completada</option>
+            </select>
+          </div>
+        </div>
+        <div class="d-flex gap-3">
+          <button type="submit" class="btn-custom">Agregar Reserva</button>
+          <a routerLink="/dashboard/admin" class="btn btn-secondary-custom">
+            <i class="bi bi-arrow-left me-2"></i>Atrás
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Filtro -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Filtro</h5>
+      <div class="row align-items-end">
+        <div class="col-md-8 mb-3">
+          <label for="filterDni" class="form-label">Filtrar por DNI del Cliente</label>
+          <input type="text" class="form-control" id="filterDni" [(ngModel)]="filterDni" name="filterDni" (ngModelChange)="applyFilters()" placeholder="Buscar por DNI...">
+        </div>
+        <div class="col-md-4 mb-3">
+          <button type="button" class="btn btn-secondary-custom" (click)="clearFilter()" [disabled]="!filterDni">Limpiar Filtro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Reservas -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Lista de Reservas</h5>
+      <table class="table table-hover">
+        <thead class="table-header">
+          <tr>
+            <th>ID</th>
+            <th>DNI</th>
+            <th>Cliente</th>
+            <th>Empleado</th>
+            <th>Fecha</th>
+            <th>Servicio</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let reserva of filteredReservas">
+            <td>{{ reserva.id }}</td>
+            <td>{{ reserva.cliente.dni }}</td>
+            <td>{{ reserva.cliente.nombre }} {{ reserva.cliente.apellido }}</td>
+            <td>{{ reserva.empleado.nombre }} {{ reserva.empleado.apellido }}</td>
+            <td>{{ reserva.fechaReserva | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+            <td>{{ reserva.servicio }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'bg-primary': reserva.status === 'PENDIENTE',
+                'bg-success': reserva.status === 'CONFIRMADA',
+                'bg-danger': reserva.status === 'CANCELADA',
+                'bg-secondary': reserva.status === 'COMPLETADA'
+              }">{{ reserva.status }}</span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-warning-custom me-2" (click)="editReserva(reserva)" data-bs-toggle="modal" data-bs-target="#editReservaModal">Editar</button>
+              <button class="btn btn-sm btn-danger-custom" (click)="deleteReserva(reserva.id)">Eliminar</button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredReservas.length === 0">
+            <td colspan="8" class="text-center">No hay reservas registradas.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal para Editar Reserva -->
+  <div class="modal fade" id="editReservaModal" tabindex="-1" aria-labelledby="editReservaModalLabel" aria-hidden="true" *ngIf="editingReserva">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editReservaModalLabel">Editar Reserva</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="updateReserva()">
+            <div class="mb-3">
+              <label for="editCliente" class="form-label">Cliente</label>
+              <select class="form-select" id="editCliente" [(ngModel)]="editingReserva.cliente.id" name="editCliente" required>
+                <option value="" disabled>Selecciona un cliente</option>
+                <option *ngFor="let cliente of clientes" [value]="cliente.id">{{ cliente.nombre }} {{ cliente.apellido }}</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editEmpleado" class="form-label">Empleado</label>
+              <select class="form-select" id="editEmpleado" [(ngModel)]="editingReserva.empleado.id" name="editEmpleado" required>
+                <option value="" disabled>Selecciona un empleado</option>
+                <option *ngFor="let empleado of empleados" [value]="empleado.id">{{ empleado.nombre }} {{ empleado.apellido }} ({{ empleado.rol }})</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editFechaReserva" class="form-label">Fecha y Hora</label>
+              <input type="datetime-local" class="form-control" id="editFechaReserva" [(ngModel)]="editingReserva.fechaReserva" name="editFechaReserva" required [min]="getMinDate()">
+            </div>
+            <div class="mb-3">
+              <label for="editServicio" class="form-label">Servicio</label>
+              <select class="form-select" id="editServicio" [(ngModel)]="editingReserva.servicio" name="editServicio" required>
+                <option value="" disabled>Selecciona un servicio</option>
+                <option *ngFor="let servicio of servicios" [value]="servicio.enum">{{ servicio.nombre }}</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editStatus" class="form-label">Estado</label>
+              <select class="form-select" id="editStatus" [(ngModel)]="editingReserva.status" name="editStatus" required>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="CONFIRMADA">Confirmada</option>
+                <option value="CANCELADA">Cancelada</option>
+                <option value="COMPLETADA">Completada</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-custom w-100">Actualizar Reserva</button>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

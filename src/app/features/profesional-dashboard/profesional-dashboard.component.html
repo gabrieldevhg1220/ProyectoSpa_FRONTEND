@@ -1,0 +1,47 @@
+<div class="container my-5">
+  <h2 class="mb-3 text-center">Área de Trabajo del Profesional</h2>
+  <h5 class="mb-4 text-center" *ngIf="rolProfesional && nombreProfesional">Rol: {{ nombreProfesional }}: {{ simplificarRol(rolProfesional) }}</h5>
+
+  <!-- Lista de Reservas -->
+  <h4 class="mb-4">Turnos del {{ fechaActual }}</h4>
+  <div class="card shadow-lg border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-header">
+            <tr>
+              <th>ID</th>
+              <th>Cliente</th>
+              <th>DNI</th>
+              <th>Correo</th>
+              <th>Fecha</th>
+              <th>Servicio</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let reserva of reservas">
+              <td>{{ reserva.id }}</td>
+              <td>{{ reserva.cliente.nombre }} {{ reserva.cliente.apellido }}</td>
+              <td>{{ reserva.cliente.dni }}</td>
+              <td>{{ reserva.cliente.email }}</td>
+              <td>{{ reserva.fechaReserva | date:'yyyy-MM-dd HH:mm:ss':'America/Argentina/Buenos_Aires' }}</td>
+              <td>{{ reserva.servicio }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'bg-primary': reserva.status === 'PENDIENTE',
+                  'bg-success': reserva.status === 'CONFIRMADA',
+                  'bg-danger': reserva.status === 'CANCELADA',
+                  'bg-secondary': reserva.status === 'COMPLETADA'
+                }">{{ reserva.status }}</span>
+              </td>
+            </tr>
+            <tr *ngIf="reservas.length === 0">
+              <td colspan="7" class="text-center">No tienes turnos hoy.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

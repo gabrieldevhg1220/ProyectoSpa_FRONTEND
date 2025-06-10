@@ -1,0 +1,54 @@
+// Importar variables de la paleta global
+@use '../../../styles.scss' as styles;
+@use 'sass:color';
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table {
+  font-size: 0.9rem;
+  width: 100%;
+  margin-bottom: 0;
+
+  th, td {
+    padding: 0.5rem 0.3rem;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  th:nth-child(1), td:nth-child(1) { width: 8%; }
+  th:nth-child(2), td:nth-child(2) { width: 15%; }
+  th:nth-child(3), td:nth-child(3) { width: 12%; }
+  th:nth-child(4), td:nth-child(4) { width: 20%; }
+  th:nth-child(5), td:nth-child(5) { width: 15%; }
+  th:nth-child(6), td:nth-child(6) { width: 15%; }
+  th:nth-child(7), td:nth-child(7) { width: 15%; }
+
+  .table-header {
+    background-color: #4A8A7B; // Verde Jade Suave para el encabezado
+    color: #F7F9FA; // Blanco Hielo para texto
+    font-weight: bold;
+  }
+
+  .badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    &.bg-primary { background-color: #4A8A7B !important; }
+    &.bg-success { background-color: #48BB78 !important; }
+    &.bg-danger { background-color: #F56565 !important; }
+    &.bg-secondary { background-color: #E8ECEF !important; }
+  }
+}
+
+.card {
+  background-color: #F7F9FA; // Blanco Hielo para la tarjeta
+  border: 1px solid #A3BFFA; // Azul Suave para bordes
+}
+
+h2, h4 {
+  color: #06c7c4; // Azul Lavanda Suave para títulos
+}
