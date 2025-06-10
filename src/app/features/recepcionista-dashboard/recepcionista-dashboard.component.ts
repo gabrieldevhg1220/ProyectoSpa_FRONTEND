@@ -73,9 +73,8 @@ export class RecepcionistaDashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadReservas();
     this.loadClientes();
-    this.loadEmpleados();
     this.loadServicios();
-    // Eliminado this.setDefaultDate()
+    this.updateEmpleadosByServicio(''); // Inicializa con empleados vacíos
   }
 
   loadServicios(): void {
@@ -137,8 +136,10 @@ export class RecepcionistaDashboardComponent implements OnInit {
     });
   }
 
-  loadEmpleados(): void {
-    this.empleadoService.getEmpleadosForReservas().subscribe({
+  updateEmpleadosByServicio(servicio: string): void {
+    // Asegurar que el servicio no sea nulo o vacío
+    const safeServicio = servicio || '';
+    this.empleadoService.getEmpleadosForServicio(safeServicio).subscribe({
       next: (empleados) => {
         const isGerenteGeneral = this.authService.isGerenteGeneral();
         const isRecepcionista = this.authService.isRecepcionista();
@@ -149,44 +150,40 @@ export class RecepcionistaDashboardComponent implements OnInit {
         } else {
           this.empleados = empleados;
         }
+        // Mostrar mensaje de éxito al cargar empleados para un servicio seleccionado
+        if (safeServicio) {
+          this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
+        }
       },
       error: (error) => {
-        console.error('Error al cargar los empleados:', error);
-        let errorMessage = 'Error al cargar los empleados.';
-        if (error.status === 403) {
-          errorMessage = 'No tienes permisos para ver los empleados.';
-        } else if (error.status === 401) {
-          errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
-          this.authService.logout();
+        console.error('Error al cargar los empleados para el servicio:', error);
+        // Mostrar mensaje informativo solo si el servicio está vacío (inicialización)
+        if (!safeServicio) {
+          this.toastr.success('Se cargó exitosamente la lista de servicios.', 'Éxito');
+        } else {
+          this.toastr.error('Error al cargar los empleados para el servicio seleccionado.', 'Error');
         }
-        this.toastr.error(errorMessage, 'Error');
+        this.empleados = []; // Resetear a lista vacía en caso de error
       }
     });
   }
 
-  // Método para aplicar los filtros
   applyFilters(): void {
     this.filteredReservas = this.reservas.filter(reserva => {
-      // Filtro por nombre del especialista
       const especialistaMatch = !this.filterEspecialista || 
         `${reserva.empleado.nombre} ${reserva.empleado.apellido}`
           .toLowerCase()
           .includes(this.filterEspecialista.toLowerCase());
-
-      // Filtro por DNI del cliente
       const dniMatch = !this.filterDni || 
         reserva.cliente.dni.toLowerCase().includes(this.filterDni.toLowerCase());
-
-      // Combinar ambos filtros
       return especialistaMatch && dniMatch;
     });
   }
 
-  // Método para limpiar los filtros y recargar las reservas
   clearFilters(): void {
     this.filterEspecialista = '';
     this.filterDni = '';
-    this.loadReservas(); // Recarga la lista de reservas
+    this.loadReservas();
   }
 
   createReserva(): void {
@@ -198,7 +195,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
     this.reservaService.createReserva(reservaToCreate).subscribe({
       next: (newReserva) => {
         this.reservas.push(newReserva);
-        this.applyFilters(); // Actualizar la lista filtrada
+        this.applyFilters();
         this.toastr.success('Reserva creada exitosamente.', 'Éxito');
         this.ultimaReserva = newReserva;
         this.reservaCreada = true;
@@ -226,14 +223,11 @@ export class RecepcionistaDashboardComponent implements OnInit {
       this.toastr.error('No hay datos suficientes para generar la factura.', 'Error');
       return;
     }
-
     this.clienteService.getCliente(this.ultimaReserva.cliente.id).subscribe({
       next: (cliente) => {
         this.clienteData = cliente;
-
         const servicioDetails = this.serviciosList.find(s => s.enum === this.ultimaReserva!.servicio) || 
           { nombre: 'Servicio Desconocido', enum: '', precio: 0 };
-
         this.facturaService.generateFactura(
           this.ultimaReserva,
           this.clienteData,
@@ -278,7 +272,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
           if (index !== -1) {
             this.reservas[index] = updatedReserva;
           }
-          this.applyFilters(); // Actualizar la lista filtrada
+          this.applyFilters();
           this.editingReserva = null;
           this.toastr.success('Reserva actualizada exitosamente.', 'Éxito');
         },
@@ -306,7 +300,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
       this.reservaService.deleteReserva(id).subscribe({
         next: () => {
           this.reservas = this.reservas.filter(r => r.id !== id);
-          this.applyFilters(); // Actualizar la lista filtrada
+          this.applyFilters();
           this.toastr.success('Reserva eliminada exitosamente.', 'Éxito');
         },
         error: (error) => {
@@ -342,18 +336,18 @@ export class RecepcionistaDashboardComponent implements OnInit {
       servicio: '',
       status: 'PENDIENTE'
     };
-    // Eliminado this.setDefaultDate()
+    this.updateEmpleadosByServicio(''); // Reinicia los empleados al cambiar a nueva reserva
   }
 
   getMinDate(): string {
     const now = new Date();
     const zonedDate = toZonedTime(now, 'America/Argentina/Buenos_Aires');
-    return format(zonedDate, "yyyy-MM-dd'T'HH:mm"); // Formato "2025-06-09T21:48" (24h)
+    return format(zonedDate, "yyyy-MM-dd'T'HH:mm");
   }
 
   setDefaultDate(): void {
     const now = new Date();
     const zonedDate = toZonedTime(now, 'America/Argentina/Buenos_Aires');
-    this.newReserva.fechaReserva = format(zonedDate, "yyyy-MM-dd'T'HH:mm"); // Formato "2025-06-09T21:48" (24h)
+    this.newReserva.fechaReserva = format(zonedDate, "yyyy-MM-dd'T'HH:mm");
   }
 }

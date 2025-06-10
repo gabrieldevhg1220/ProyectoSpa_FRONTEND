@@ -30,7 +30,7 @@
           </div>
           <div class="col-md-4 mb-4">
             <label for="servicio" class="form-label">Servicio</label>
-            <select class="form-select" id="servicio" [(ngModel)]="newReserva.servicio" name="servicio" required>
+            <select class="form-select" id="servicio" [(ngModel)]="newReserva.servicio" name="servicio" required (ngModelChange)="updateEmpleadosByServicio(newReserva.servicio)">
               <option *ngFor="let servicio of serviciosList" [value]="servicio.enum">{{ servicio.nombre }}</option>
             </select>
           </div>
@@ -90,8 +90,8 @@
               <th>Especialista</th>
               <th>Fecha</th>
               <th>Servicio</th>
-              <th style="width: 120px; min-width: 120px;">Estado</th> <!-- Ancho fijo con min-width -->
-              <th class="actions-column" style="width: 180px; min-width: 180px;">Acciones</th> <!-- Ancho fijo con min-width -->
+              <th style="width: 120px; min-width: 120px;">Estado</th>
+              <th class="actions-column" style="width: 180px; min-width: 180px;">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -155,7 +155,7 @@
             </div>
             <div class="mb-4">
               <label for="editServicio" class="form-label">Servicio</label>
-              <select class="form-select" id="editServicio" [(ngModel)]="editingReserva.servicio" name="editServicio" required>
+              <select class="form-select" id="editServicio" [(ngModel)]="editingReserva.servicio" name="editServicio" required (ngModelChange)="updateEmpleadosByServicio(editingReserva.servicio)">
                 <option *ngFor="let servicio of serviciosList" [value]="servicio.enum">{{ servicio.nombre }}</option>
               </select>
             </div>

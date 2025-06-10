@@ -27,7 +27,7 @@
           </div>
           <div class="col-md-4 mb-3">
             <label for="servicio" class="form-label">Servicio</label>
-            <select class="form-select" id="servicio" [(ngModel)]="newReserva.servicio" name="servicio" required>
+            <select class="form-select" id="servicio" [(ngModel)]="newReserva.servicio" name="servicio" required (ngModelChange)="updateEmpleadosByServicio($event)">
               <option value="" disabled selected>Selecciona un servicio</option>
               <option *ngFor="let servicio of servicios" [value]="servicio.enum">{{ servicio.nombre }}</option>
             </select>
@@ -144,7 +144,7 @@
             </div>
             <div class="mb-3">
               <label for="editServicio" class="form-label">Servicio</label>
-              <select class="form-select" id="editServicio" [(ngModel)]="editingReserva.servicio" name="editServicio" required>
+              <select class="form-select" id="editServicio" [(ngModel)]="editingReserva.servicio" name="editServicio" required (ngModelChange)="updateEmpleadosByServicio($event)">
                 <option value="" disabled>Selecciona un servicio</option>
                 <option *ngFor="let servicio of servicios" [value]="servicio.enum">{{ servicio.nombre }}</option>
               </select>

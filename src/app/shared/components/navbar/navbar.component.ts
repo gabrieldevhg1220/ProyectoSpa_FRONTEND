@@ -83,7 +83,6 @@ export class NavbarComponent {
           modalInstance.hide();
         }
         this.loginData = { email: '', password: '' };
-        // Redirigir según el rol del usuario
         if (this.authService.isGerenteGeneral()) {
           this.router.navigate(['/dashboard/admin']);
         } else if (this.authService.isRecepcionista()) {
@@ -96,7 +95,17 @@ export class NavbarComponent {
       },
       error: (error) => {
         console.error('Error en el login:', error);
-        alert(error.error.message || 'Error al iniciar sesión. Por favor, verifica tus credenciales.');
+        let errorMessage = 'Error al iniciar sesión. Por favor, verifica tus credenciales.';
+        if (error.status === 401) {
+          errorMessage = 'Correo o contraseña incorrectos.';
+        } else if (error.status === 404) {
+          errorMessage = 'El correo no está registrado.';
+        } else if (error.error && typeof error.error === 'object' && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        alert(errorMessage);
       }
     });
   }
@@ -131,7 +140,6 @@ export class NavbarComponent {
   reservar(servicioEnum: string) {
     if (this.authService.getToken()) {
       this.router.navigate(['/reserva'], { queryParams: { servicio: servicioEnum } });
-      // Cerrar el modal de servicios después de reservar
       const modalElement = document.getElementById('serviciosModal') as HTMLElement;
       if (modalElement) {
         const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
@@ -144,7 +152,6 @@ export class NavbarComponent {
         const modalInstance = new bootstrap.Modal(modalElement);
         modalInstance.show();
       }
-      // Cerrar el modal de servicios si el usuario no está logueado
       const serviciosModal = document.getElementById('serviciosModal') as HTMLElement;
       if (serviciosModal) {
         const serviciosModalInstance = bootstrap.Modal.getInstance(serviciosModal) || new bootstrap.Modal(serviciosModal);

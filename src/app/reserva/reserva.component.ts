@@ -121,22 +121,7 @@ export class ReservaComponent implements OnInit {
       return;
     }
 
-    this.empleadoService.getEmpleadosForReservas().subscribe({
-      next: (empleados) => {
-        const rolesExcluidos = ['GERENTE_GENERAL', 'RECEPCIONISTA', 'COORDINADOR_AREA'];
-        this.empleadosDisponibles = empleados.filter(empleado => !rolesExcluidos.includes(empleado.rol));
-        console.log('Empleados disponibles filtrados:', this.empleadosDisponibles);
-        if (this.empleadosDisponibles.length > 0) {
-          this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
-        } else {
-          this.toastr.info('No hay especialistas disponibles en este momento.', 'Información');
-        }
-      },
-      error: (error) => {
-        console.error('Error al obtener empleados:', error);
-        this.toastr.error(error.message || 'Error al cargar la lista de empleados. Por favor, intenta de nuevo.', 'Error');
-      }
-    });
+    this.updateEmpleadosByServicio(this.servicio || '');
   }
 
   simplificarRol(rol: string): string {
@@ -178,6 +163,7 @@ export class ReservaComponent implements OnInit {
   onServicioChange(newValue: string | null) {
     this.servicio = newValue;
     console.log('Servicio seleccionado:', this.servicio);
+    this.updateEmpleadosByServicio(this.servicio || '');
   }
 
   onEmpleadoChange(newValue: number | null) {
@@ -278,6 +264,52 @@ export class ReservaComponent implements OnInit {
       this.toastr.success(`Factura ${invoiceNumber} generada y abierta.`, 'Éxito');
     }).catch((error) => {
       this.toastr.error(error.message || 'Error al generar la factura. Por favor, intenta de nuevo.', 'Error');
+    });
+  }
+
+  updateEmpleadosByServicio(servicio: string): void {
+    const safeServicio = servicio || '';
+    this.empleadoService.getEmpleadosForServicio(safeServicio).subscribe({
+      next: (empleados) => {
+        // Obtener todos los empleados disponibles (incluyendo GERENTE_GENERAL)
+        this.empleadoService.getEmpleadosForReservas().subscribe({
+          next: (allEmpleados) => {
+            // Filtrar empleados según el servicio seleccionado
+            let filteredEmpleados = empleados;
+            if (safeServicio) {
+              filteredEmpleados = empleados.filter(empleado =>
+                empleado.rol !== 'GERENTE_GENERAL' && empleado.rol !== 'RECEPCIONISTA' && empleado.rol !== 'COORDINADOR_AREA'
+              );
+            }
+            // Siempre incluir GERENTE_GENERAL como opción
+            const gerenteGeneral = allEmpleados.find(empleado => empleado.rol === 'GERENTE_GENERAL');
+            if (gerenteGeneral) {
+              filteredEmpleados = [gerenteGeneral, ...filteredEmpleados];
+            }
+            this.empleadosDisponibles = filteredEmpleados;
+            console.log('Empleados disponibles actualizados:', this.empleadosDisponibles);
+            if (this.empleadosDisponibles.length > 0) {
+              this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
+            } else {
+              this.toastr.info('No hay especialistas disponibles para este servicio.', 'Información');
+            }
+          },
+          error: (error) => {
+            console.error('Error al obtener todos los empleados:', error);
+            this.toastr.error('Error al cargar la lista de empleados. Por favor, intenta de nuevo.', 'Error');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar los empleados para el servicio:', error);
+        // Mostrar mensaje informativo solo si el servicio está vacío (inicialización)
+        if (!safeServicio) {
+          this.toastr.success('Se cargó exitosamente la lista de servicios.', 'Éxito');
+        } else {
+          this.toastr.error('Error al cargar los empleados para el servicio seleccionado.', 'Error');
+        }
+        this.empleadosDisponibles = [];
+      }
     });
   }
 }

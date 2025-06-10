@@ -53,6 +53,10 @@ export class AdminReservasComponent implements OnInit {
     this.loadClientes();
     this.loadEmpleados();
     this.loadServicios();
+    // No llamar a updateEmpleadosByServicio al inicio, solo tras seleccionar un servicio
+    if (this.servicios.length > 0) {
+      this.toastr.success('Se cargó exitosamente la lista de servicios.', 'Éxito');
+    }
   }
 
   loadReservas(): void {
@@ -266,5 +270,30 @@ export class AdminReservasComponent implements OnInit {
   getMinDate(): string {
     const now = new Date();
     return now.toISOString().slice(0, 16); // Formato "2025-06-09T19:26" (24h)
+  }
+
+  updateEmpleadosByServicio(servicio: string): void {
+    if (this.authService.isGerenteGeneral()) {
+      if (!servicio || servicio === '') {
+        this.toastr.success('Se cargó exitosamente la lista de servicios.', 'Éxito');
+        this.empleados = [];
+      } else {
+        this.empleadoService.getEmpleadosForServicio(servicio).subscribe({
+          next: (empleados) => {
+            this.empleados = empleados;
+            if (this.empleados.length > 0) {
+              this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
+            } else {
+              this.toastr.info('No hay especialistas disponibles para este servicio.', 'Información');
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar los empleados para el servicio:', error);
+            this.toastr.error('Error al cargar los empleados para el servicio seleccionado.', 'Error');
+            this.empleados = [];
+          }
+        });
+      }
+    }
   }
 }
