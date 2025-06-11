@@ -17,8 +17,9 @@ export class ProfesionalDashboardComponent implements OnInit {
   fechaActual: string = new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: 'numeric', month: 'long', year: 'numeric' });
   rolProfesional: string | null = null;
   nombreProfesional: string | null = null;
-  selectedReserva: Reserva | null = null; // Para manejar la reserva seleccionada
-  historial: string = ''; // Campo para el historial
+  selectedReserva: Reserva | null = null;
+  historial: string = '';
+  clienteHistorial: Reserva[] = []; // Para almacenar el historial completo del cliente
 
   constructor(
     private reservaService: ReservaService,
@@ -90,7 +91,20 @@ export class ProfesionalDashboardComponent implements OnInit {
 
   selectReserva(reserva: Reserva): void {
     this.selectedReserva = { ...reserva };
-    this.historial = this.selectedReserva.historial || ''; // Cargar el historial existente
+    this.historial = this.selectedReserva.historial || '';
+    this.loadClienteHistorial(reserva.cliente.id); // Cargar el historial completo del cliente
+  }
+
+  loadClienteHistorial(clienteId: number): void {
+    this.reservaService.getClienteHistorial(clienteId).subscribe({
+      next: (historial) => {
+        this.clienteHistorial = historial;
+      },
+      error: (error) => {
+        console.error('Error al cargar el historial del cliente:', error);
+        this.toastr.error('Error al cargar el historial del cliente.', 'Error');
+      }
+    });
   }
 
   saveHistorial(): void {
@@ -102,6 +116,7 @@ export class ProfesionalDashboardComponent implements OnInit {
           if (index !== -1) {
             this.reservas[index] = { ...this.selectedReserva!, historial: this.historial };
           }
+          this.loadClienteHistorial(this.selectedReserva!.cliente.id); // Actualizar el historial completo
           this.toastr.success('Historial guardado exitosamente.', 'Éxito');
           this.selectedReserva = null;
           this.historial = '';
@@ -119,5 +134,6 @@ export class ProfesionalDashboardComponent implements OnInit {
   cancelEdit(): void {
     this.selectedReserva = null;
     this.historial = '';
+    this.clienteHistorial = [];
   }
 }

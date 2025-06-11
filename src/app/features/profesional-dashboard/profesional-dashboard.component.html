@@ -51,10 +51,10 @@
 
   <!-- Modal para Historial -->
   <div class="modal fade" id="historialModal" tabindex="-1" aria-labelledby="historialModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg"> <!-- Aumentamos el tamaño del modal -->
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="historialModalLabel">Agregar Historial</h5>
+          <h5 class="modal-title" id="historialModalLabel">Agregar Historial - {{ selectedReserva?.cliente.nombre }} {{ selectedReserva?.cliente.apellido }}</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -62,6 +62,18 @@
             <div class="mb-3">
               <label for="historial" class="form-label">Notas sobre el Servicio Realizado</label>
               <textarea class="form-control" id="historial" [(ngModel)]="historial" name="historial" rows="4" placeholder="Ej: Masaje completado, cliente satisfecho."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Historial Completo del Cliente</label>
+              <div class="list-group">
+                <div *ngFor="let reserva of clienteHistorial" class="list-group-item">
+                  <strong>Fecha:</strong> {{ reserva.fechaReserva | date:'yyyy-MM-dd HH:mm:ss' }} | 
+                  <strong>Servicio:</strong> {{ reserva.servicio }} | 
+                  <strong>Estado:</strong> {{ reserva.status }} | 
+                  <strong>Historial:</strong> {{ reserva.historial || 'Sin notas' }}
+                </div>
+                <div *ngIf="clienteHistorial.length === 0" class="list-group-item text-center">No hay historial previo.</div>
+              </div>
             </div>
           </form>
         </div>

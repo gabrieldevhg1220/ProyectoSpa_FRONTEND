@@ -28,6 +28,7 @@ export class ReservaService {
   private serviciosUrl = `${environment.apiUrl}/api/reservas/servicios`;
   private clienteApiUrl = `${environment.apiUrl}/api/clientes`;
   private profesionalApiUrl = `${environment.apiUrl}/api/profesional/reservas/hoy`;
+  private historialApiUrl = `${environment.apiUrl}/api/profesional/clientes`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -158,6 +159,17 @@ export class ReservaService {
       tap(enums => console.log('Enums de servicios obtenidos:', enums)),
       catchError(error => {
         console.error('Error al obtener enums de servicios:', error);
+        throw error;
+      })
+    );
+  }
+
+  // Método para obtener el historial del cliente
+  getClienteHistorial(clienteId: number): Observable<Reserva[]> {
+    const url = `${this.historialApiUrl}/${clienteId}/historial`;
+    return this.http.get<Reserva[]>(url, { headers: this.getHeaders() }).pipe(
+      catchError(error => {
+        console.error('Error al obtener el historial del cliente:', error);
         throw error;
       })
     );
