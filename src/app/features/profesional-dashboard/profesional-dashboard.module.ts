@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { ProfesionalDashboardRoutingModule } from './profesional-dashboard-routing.module';
 import { ProfesionalDashboardComponent } from './profesional-dashboard.component';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -11,6 +12,7 @@ import { ProfesionalDashboardComponent } from './profesional-dashboard.component
   ],
   imports: [
     CommonModule,
+    FormsModule,
     ProfesionalDashboardRoutingModule
   ]
 })

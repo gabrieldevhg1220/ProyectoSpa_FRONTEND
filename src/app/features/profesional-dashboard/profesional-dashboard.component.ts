@@ -4,7 +4,7 @@ import { Reserva } from '@core/models/reserva';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '@core/services/auth.service';
 import { EmpleadoService } from '@core/services/empleado.service';
-import { Empleado } from '@core/models/empleado'; // Asegúrate de importar el modelo Empleado
+import { Empleado } from '@core/models/empleado';
 
 @Component({
   selector: 'app-profesional-dashboard',
@@ -16,7 +16,9 @@ export class ProfesionalDashboardComponent implements OnInit {
   reservas: Reserva[] = [];
   fechaActual: string = new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: 'numeric', month: 'long', year: 'numeric' });
   rolProfesional: string | null = null;
-  nombreProfesional: string | null = null; // Nueva propiedad para el nombre
+  nombreProfesional: string | null = null;
+  selectedReserva: Reserva | null = null; // Para manejar la reserva seleccionada
+  historial: string = ''; // Campo para el historial
 
   constructor(
     private reservaService: ReservaService,
@@ -27,7 +29,7 @@ export class ProfesionalDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadReservas();
-    this.loadRolYNombreProfesional(); // Cambiado de loadRolProfesional
+    this.loadRolYNombreProfesional();
   }
 
   loadReservas(): void {
@@ -55,7 +57,7 @@ export class ProfesionalDashboardComponent implements OnInit {
       this.empleadoService.getEmpleadoById(parseInt(userId, 10)).subscribe({
         next: (empleado: Empleado) => {
           this.rolProfesional = empleado.rol;
-          this.nombreProfesional = `${empleado.nombre} ${empleado.apellido}`; // Combinar nombre y apellido
+          this.nombreProfesional = `${empleado.nombre} ${empleado.apellido}`;
         },
         error: (error) => {
           console.error('Error al cargar el rol y nombre del profesional:', error);
@@ -84,5 +86,38 @@ export class ProfesionalDashboardComponent implements OnInit {
       default:
         return rol;
     }
+  }
+
+  selectReserva(reserva: Reserva): void {
+    this.selectedReserva = { ...reserva };
+    this.historial = this.selectedReserva.historial || ''; // Cargar el historial existente
+  }
+
+  saveHistorial(): void {
+    if (this.selectedReserva && this.historial.trim()) {
+      const updatedReserva = { ...this.selectedReserva, historial: this.historial };
+      this.reservaService.updateReserva(this.selectedReserva.id, updatedReserva).subscribe({
+        next: () => {
+          const index = this.reservas.findIndex(r => r.id === this.selectedReserva!.id);
+          if (index !== -1) {
+            this.reservas[index] = { ...this.selectedReserva!, historial: this.historial };
+          }
+          this.toastr.success('Historial guardado exitosamente.', 'Éxito');
+          this.selectedReserva = null;
+          this.historial = '';
+        },
+        error: (error) => {
+          console.error('Error al guardar el historial:', error);
+          this.toastr.error('Error al guardar el historial. Por favor, intenta de nuevo.', 'Error');
+        }
+      });
+    } else {
+      this.toastr.error('Por favor, ingresa un historial.', 'Error');
+    }
+  }
+
+  cancelEdit(): void {
+    this.selectedReserva = null;
+    this.historial = '';
   }
 }
