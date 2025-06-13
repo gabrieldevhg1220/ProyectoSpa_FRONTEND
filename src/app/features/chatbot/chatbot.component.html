@@ -1,0 +1,20 @@
+<div class="chatbot-container" [class.open]="isOpen">
+  <div class="chatbot-toggle" (click)="toggleChat()" id="chatbot-toggle">
+    <span>💬 Asistente</span>
+  </div>
+  <div class="chatbot-box">
+    <div class="chatbot-header">
+      <h4>Asistente Virtual</h4>
+      <button class="close-btn" (click)="toggleChat()">×</button>
+    </div>
+    <div class="chatbot-messages">
+      <div *ngFor="let message of messages" class="message {{message.sender}}">
+        <p>{{ message.text }}</p>
+      </div>
+    </div>
+    <div class="chatbot-input">
+      <input type="text" [(ngModel)]="userInput" (keyup.enter)="sendMessage()" placeholder="Escribe tu mensaje..." />
+      <button (click)="sendMessage()">Enviar</button>
+    </div>
+  </div>
+</div>

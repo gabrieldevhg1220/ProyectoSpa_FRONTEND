@@ -17,6 +17,7 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { RecepcionistaDashboardModule } from './features/recepcionista-dashboard/recepcionista-dashboard.module';
 import { GestionClientesComponent } from './gestion-clientes/gestion-clientes.component';
+import { ChatbotComponent } from './features/chatbot/chatbot.component';
 
 
 @NgModule({
