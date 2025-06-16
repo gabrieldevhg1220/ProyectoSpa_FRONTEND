@@ -24,6 +24,7 @@ export class ReservaComponent implements OnInit {
   servicioDetails: { nombre: string, precio: number } | null = null;
   clienteData: any = null;
   formularioDeshabilitado: boolean = false;
+  show48HoursWarning: boolean = false; // Nueva propiedad para controlar el mensaje
 
   serviciosIndividuales = [
     {
@@ -164,11 +165,13 @@ export class ReservaComponent implements OnInit {
     this.servicio = newValue;
     console.log('Servicio seleccionado:', this.servicio);
     this.updateEmpleadosByServicio(this.servicio || '');
+    this.check48HoursWarning(); // Verificar advertencia al cambiar el servicio
   }
 
   onEmpleadoChange(newValue: number | null) {
     this.empleadoId = newValue;
     console.log('Empleado seleccionado:', this.empleadoId);
+    this.check48HoursWarning(); // Verificar advertencia al cambiar el empleado
   }
 
   isFormValid(): boolean {
@@ -179,6 +182,7 @@ export class ReservaComponent implements OnInit {
     const isEmpleadosAvailable = this.empleadosDisponibles.length > 0;
     const isDateWithin48Hours = this.isDateWithin48Hours(this.fechaReserva);
     const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable && isDateWithin48Hours;
+    this.check48HoursWarning(); // Actualizar advertencia después de validar
     console.log('Validación resultado:', isValid);
     return isValid;
   }
@@ -190,6 +194,10 @@ export class ReservaComponent implements OnInit {
     const diffHours = diffMs / (1000 * 60 * 60);
     console.log('Diferencia en horas:', diffHours);
     return diffHours >= 48; // True si la diferencia es >= 48 horas
+  }
+
+  private check48HoursWarning(): void {
+    this.show48HoursWarning = this.fechaReserva.trim().length > 0 && !this.isDateWithin48Hours(this.fechaReserva);
   }
 
   getMinDate(): string {
@@ -281,7 +289,7 @@ export class ReservaComponent implements OnInit {
     const safeServicio = servicio || '';
     this.empleadoService.getEmpleadosForServicio(safeServicio).subscribe({
       next: (empleados) => {
-        // Obtener todos los empleados disponibles (incluyendo GERENTE_GENERAL)
+        // Obtener todos los empleados disponibles
         this.empleadoService.getEmpleadosForReservas().subscribe({
           next: (allEmpleados) => {
             // Filtrar empleados según el servicio seleccionado
@@ -291,18 +299,17 @@ export class ReservaComponent implements OnInit {
                 empleado.rol !== 'GERENTE_GENERAL' && empleado.rol !== 'RECEPCIONISTA' && empleado.rol !== 'COORDINADOR_AREA'
               );
             }
-            // Siempre incluir GERENTE_GENERAL como opción
-            const gerenteGeneral = allEmpleados.find(empleado => empleado.rol === 'GERENTE_GENERAL');
-            if (gerenteGeneral) {
-              filteredEmpleados = [gerenteGeneral, ...filteredEmpleados];
-            }
-            this.empleadosDisponibles = filteredEmpleados;
+            // Excluir GERENTE_GENERAL, RECEPCIONISTA y COORDINADOR_AREA de la lista final
+            this.empleadosDisponibles = filteredEmpleados.filter(empleado =>
+              empleado.rol !== 'GERENTE_GENERAL' && empleado.rol !== 'RECEPCIONISTA' && empleado.rol !== 'COORDINADOR_AREA'
+            );
             console.log('Empleados disponibles actualizados:', this.empleadosDisponibles);
             if (this.empleadosDisponibles.length > 0) {
               this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
             } else {
               this.toastr.info('No hay especialistas disponibles para este servicio.', 'Información');
             }
+            this.check48HoursWarning(); // Verificar advertencia al actualizar empleados
           },
           error: (error) => {
             console.error('Error al obtener todos los empleados:', error);
