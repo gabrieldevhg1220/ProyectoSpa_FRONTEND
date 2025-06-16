@@ -5,25 +5,25 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 1001; // Aumentado para superar otros elementos
+  z-index: 1001;
   .chatbot-box {
-    display: none; // Oculto por defecto
+    display: none;
   }
   &.open {
     .chatbot-box {
-      display: block !important; // Forzar visibilidad cuando open está presente
+      display: block !important;
     }
   }
 }
 
 .chatbot-toggle {
-  background-color: styles.$primary; // Medium Aquamarine
+  background-color: styles.$primary;
   color: #fff;
   padding: 10px 20px;
   border-radius: 50px;
   cursor: pointer;
   font-size: 1rem;
-  box-shadow: 0 4px 8px rgba(188, 143, 143, 0.2); // Rosy Brown shadow
+  box-shadow: 0 4px 8px rgba(188, 143, 143, 0.2);
   transition: transform 0.3s ease;
   &:hover {
     transform: scale(1.05);
@@ -31,12 +31,12 @@
 }
 
 .chatbot-box {
-  width: 350px; // Aumentado para dar más espacio al botón
-  background-color: styles.$neutral; // Mint Cream
+  width: 350px;
+  background-color: styles.$neutral;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   .chatbot-header {
-    background-color: styles.$primary; // Medium Aquamarine
+    background-color: styles.$primary;
     color: #fff;
     padding: 10px;
     border-top-left-radius: 10px;
@@ -47,7 +47,7 @@
     h4 {
       margin: 0;
       font-size: 1.1rem;
-      color: #fff; // Título en blanco
+      color: #fff;
     }
     .close-btn {
       background: none;
@@ -67,15 +67,15 @@
       border-radius: 5px;
       max-width: 70%;
       &.bot {
-        background-color: styles.$secondary; // Beige claro
+        background-color: styles.$secondary;
         margin-left: 10px;
       }
       &.user {
-        background-color: color.adjust(styles.$primary, $lightness: -10%); // Fondo del mensaje
+        background-color: color.adjust(styles.$primary, $lightness: -10%);
         margin-right: 10px;
         text-align: right;
         p {
-          color: #fff; // Fuente blanca para mensajes del usuario
+          color: #fff;
         }
       }
       p {
@@ -86,7 +86,7 @@
   }
   .chatbot-input {
     padding: 10px;
-    border-top: 1px solid styles.$border-shadow; // Rosy Brown
+    border-top: 1px solid styles.$border-shadow;
     display: flex;
     gap: 10px;
     input {
@@ -96,7 +96,7 @@
       border-radius: 5px;
     }
     button {
-      padding: 8px 20px; // Aumentar padding para que encaje mejor
+      padding: 8px 20px;
       background-color: styles.$primary;
       color: #fff;
       border: none;

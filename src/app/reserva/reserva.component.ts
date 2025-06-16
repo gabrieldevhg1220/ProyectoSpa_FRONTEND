@@ -177,9 +177,19 @@ export class ReservaComponent implements OnInit {
     const isEmpleadoIdValid = this.empleadoId !== null && this.empleadoId > 0;
     const isServicioValid = this.servicio !== null && this.servicio.trim().length > 0;
     const isEmpleadosAvailable = this.empleadosDisponibles.length > 0;
-    const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable;
+    const isDateWithin48Hours = this.isDateWithin48Hours(this.fechaReserva);
+    const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable && isDateWithin48Hours;
     console.log('Validación resultado:', isValid);
     return isValid;
+  }
+
+  private isDateWithin48Hours(fechaReserva: string): boolean {
+    const now = new Date();
+    const selectedDate = new Date(fechaReserva);
+    const diffMs = selectedDate.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    console.log('Diferencia en horas:', diffHours);
+    return diffHours >= 48; // True si la diferencia es >= 48 horas
   }
 
   getMinDate(): string {
@@ -190,7 +200,7 @@ export class ReservaComponent implements OnInit {
   hacerReserva() {
     console.log('Ejecutando hacerReserva()');
     if (!this.isFormValid()) {
-      this.toastr.warning('Por favor, completa todos los campos requeridos.', 'Advertencia');
+      this.toastr.warning('Por favor, completa todos los campos requeridos o selecciona una fecha al menos 48 horas antes.', 'Advertencia');
       return;
     }
 
