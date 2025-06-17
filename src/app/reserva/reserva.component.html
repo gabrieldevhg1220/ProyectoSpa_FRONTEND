@@ -46,6 +46,16 @@
               No hay especialistas disponibles.
             </div>
           </div>
+          <div class="col-md-6 mb-4">
+            <label for="medioPago" class="form-label">Medio de Pago</label>
+            <select class="form-select" id="medioPago" name="medioPago" [(ngModel)]="medioPago" required>
+              <option value="" disabled selected>Seleccione un medio de pago</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+              <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+              <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+            </select>
+          </div>
         </div>
         <div class="d-flex justify-content-center gap-3">
           <button type="submit" class="btn btn-primary" [disabled]="!isFormValid()">
@@ -58,4 +68,3 @@
       </div>
     </div>
   </div>
-</div>

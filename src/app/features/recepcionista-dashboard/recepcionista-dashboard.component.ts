@@ -20,16 +20,17 @@ import { toZonedTime } from 'date-fns-tz';
 })
 export class RecepcionistaDashboardComponent implements OnInit {
   reservas: Reserva[] = [];
-  filteredReservas: Reserva[] = []; // Lista filtrada de reservas
+  filteredReservas: Reserva[] = [];
   clientes: Cliente[] = [];
   empleados: Empleado[] = [];
   newReserva: Reserva = {
     id: 0,
     cliente: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', password: '' },
     empleado: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', rol: '' },
-    fechaReserva: '', // Valor inicial vacío
+    fechaReserva: '',
     servicio: '',
-    status: 'PENDIENTE'
+    status: 'PENDIENTE',
+    medioPago: 'EFECTIVO' // Valor por defecto
   };
   editingReserva: Reserva | null = null;
   reservaCreada: boolean = false;
@@ -38,10 +39,9 @@ export class RecepcionistaDashboardComponent implements OnInit {
   serviciosList: Servicio[] = [];
   showNewReservationButton: boolean = false;
   showGenerateInvoiceButton: boolean = false;
-  filterEspecialista: string = ''; // Nuevo filtro por nombre del especialista
-  filterDni: string = ''; // Nuevo filtro por DNI del cliente
+  filterEspecialista: string = '';
+  filterDni: string = '';
 
-  // Mapeo estático para convertir enums a nombres y precios
   private servicioMap: { [key: string]: { nombre: string; precio: number } } = {
     ANTI_STRESS: { nombre: 'Anti-stress', precio: 5000 },
     DESCONTRACTURANTE: { nombre: 'Descontracturantes', precio: 5500 },
@@ -74,7 +74,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
     this.loadReservas();
     this.loadClientes();
     this.loadServicios();
-    this.updateEmpleadosByServicio(''); // Inicializa con empleados vacíos
+    this.updateEmpleadosByServicio('');
   }
 
   loadServicios(): void {
@@ -101,7 +101,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
     this.reservaService.getReservasForRecepcionista().subscribe({
       next: (reservas) => {
         this.reservas = reservas;
-        this.filteredReservas = reservas; // Inicialmente, la lista filtrada es igual a la original
+        this.filteredReservas = reservas;
       },
       error: (error) => {
         console.error('Error al cargar las reservas:', error);
@@ -137,7 +137,6 @@ export class RecepcionistaDashboardComponent implements OnInit {
   }
 
   updateEmpleadosByServicio(servicio: string): void {
-    // Asegurar que el servicio no sea nulo o vacío
     const safeServicio = servicio || '';
     this.empleadoService.getEmpleadosForServicio(safeServicio).subscribe({
       next: (empleados) => {
@@ -150,20 +149,18 @@ export class RecepcionistaDashboardComponent implements OnInit {
         } else {
           this.empleados = empleados;
         }
-        // Mostrar mensaje de éxito al cargar empleados para un servicio seleccionado
         if (safeServicio) {
           this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
         }
       },
       error: (error) => {
         console.error('Error al cargar los empleados para el servicio:', error);
-        // Mostrar mensaje informativo solo si el servicio está vacío (inicialización)
         if (!safeServicio) {
           this.toastr.success('Se cargó exitosamente la lista de servicios.', 'Éxito');
         } else {
           this.toastr.error('Error al cargar los empleados para el servicio seleccionado.', 'Error');
         }
-        this.empleados = []; // Resetear a lista vacía en caso de error
+        this.empleados = [];
       }
     });
   }
@@ -187,6 +184,11 @@ export class RecepcionistaDashboardComponent implements OnInit {
   }
 
   createReserva(): void {
+    if (!this.newReserva.cliente.id || !this.newReserva.empleado.id || !this.newReserva.fechaReserva || !this.newReserva.servicio || !this.newReserva.medioPago) {
+      this.toastr.error('Por favor, completa todos los campos requeridos.', 'Error');
+      return;
+    }
+
     const reservaToCreate = {
       ...this.newReserva,
       cliente: { id: this.newReserva.cliente.id },
@@ -204,11 +206,11 @@ export class RecepcionistaDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al crear la reserva:', error);
-        let errorMessage = 'Error al crear la reserva. Por favor, intenta de nuevo.';
+        let errorMessage = error.error?.message || 'Error al crear la reserva. Por favor, intenta de nuevo.';
         if (error.status === 403) {
           errorMessage = 'No tienes permisos para crear reservas.';
         } else if (error.status === 400) {
-          errorMessage = 'Datos inválidos. Verifica los campos e intenta de nuevo.';
+          errorMessage = error.error?.message || 'Datos inválidos. Verifica los campos e intenta de nuevo.';
         } else if (error.status === 401) {
           errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
           this.authService.logout();
@@ -256,11 +258,20 @@ export class RecepcionistaDashboardComponent implements OnInit {
   }
 
   editReserva(reserva: Reserva): void {
-    this.editingReserva = { ...reserva };
+    this.editingReserva = { ...reserva, medioPago: reserva.medioPago || 'EFECTIVO' }; // Valor por defecto si no existe
+    const modalElement = document.getElementById('editReservaModal') as HTMLElement;
+    if (modalElement) {
+      const modalInstance = new (window as any).bootstrap.Modal(modalElement);
+      modalInstance.show();
+    }
   }
 
   updateReserva(): void {
     if (this.editingReserva) {
+      if (!this.editingReserva.cliente.id || !this.editingReserva.empleado.id || !this.editingReserva.fechaReserva || !this.editingReserva.servicio || !this.editingReserva.medioPago) {
+        this.toastr.error('Por favor, completa todos los campos requeridos.', 'Error');
+        return;
+      }
       const reservaToUpdate = {
         ...this.editingReserva,
         cliente: { id: this.editingReserva.cliente.id },
@@ -273,16 +284,21 @@ export class RecepcionistaDashboardComponent implements OnInit {
             this.reservas[index] = updatedReserva;
           }
           this.applyFilters();
-          this.editingReserva = null;
           this.toastr.success('Reserva actualizada exitosamente.', 'Éxito');
+          this.editingReserva = null;
+          const modalElement = document.getElementById('editReservaModal') as HTMLElement;
+          if (modalElement) {
+            const modalInstance = (window as any).bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+          }
         },
         error: (error) => {
           console.error('Error al actualizar la reserva:', error);
-          let errorMessage = 'Error al actualizar la reserva.';
+          let errorMessage = error.error?.message || 'Error al actualizar la reserva.';
           if (error.status === 403) {
             errorMessage = 'No tienes permisos para actualizar esta reserva.';
           } else if (error.status === 400) {
-            errorMessage = 'Datos inválidos. Verifica los campos e intenta de nuevo.';
+            errorMessage = error.error?.message || 'Datos inválidos. Verifica los campos e intenta de nuevo.';
           } else if (error.status === 404) {
             errorMessage = 'La reserva no se encontró.';
           } else if (error.status === 401) {
@@ -305,7 +321,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al eliminar la reserva:', error);
-          let errorMessage = 'Error al eliminar la reserva.';
+          let errorMessage = error.error?.message || 'Error al eliminar la reserva.';
           if (error.status === 403) {
             errorMessage = 'No tienes permisos para eliminar esta reserva.';
           } else if (error.status === 404) {
@@ -332,11 +348,12 @@ export class RecepcionistaDashboardComponent implements OnInit {
       id: 0,
       cliente: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', password: '' },
       empleado: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', rol: '' },
-      fechaReserva: '', // Valor inicial vacío
+      fechaReserva: '',
       servicio: '',
-      status: 'PENDIENTE'
+      status: 'PENDIENTE',
+      medioPago: 'EFECTIVO' // Valor por defecto
     };
-    this.updateEmpleadosByServicio(''); // Reinicia los empleados al cambiar a nueva reserva
+    this.updateEmpleadosByServicio('');
   }
 
   getMinDate(): string {

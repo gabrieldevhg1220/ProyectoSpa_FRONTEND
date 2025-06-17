@@ -25,6 +25,7 @@ export class ReservaComponent implements OnInit {
   clienteData: any = null;
   formularioDeshabilitado: boolean = false;
   show48HoursWarning: boolean = false; // Nueva propiedad para controlar el mensaje
+  medioPago: string = ''; // Nuevo campo para el medio de pago
 
   serviciosIndividuales = [
     {
@@ -181,7 +182,8 @@ export class ReservaComponent implements OnInit {
     const isServicioValid = this.servicio !== null && this.servicio.trim().length > 0;
     const isEmpleadosAvailable = this.empleadosDisponibles.length > 0;
     const isDateWithin48Hours = this.isDateWithin48Hours(this.fechaReserva);
-    const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable && isDateWithin48Hours;
+    const isMedioPagoValid = this.medioPago.trim().length > 0;
+    const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable && isDateWithin48Hours && isMedioPagoValid;
     this.check48HoursWarning(); // Actualizar advertencia después de validar
     console.log('Validación resultado:', isValid);
     return isValid;
@@ -227,7 +229,8 @@ export class ReservaComponent implements OnInit {
       empleado: { id: this.empleadoId },
       fechaReserva: fechaFormateada,
       servicio: this.servicio,
-      status: 'CONFIRMADA'
+      status: 'CONFIRMADA',
+      medioPago: this.medioPago
     };
 
     this.reservaService.createReserva(reserva).subscribe({

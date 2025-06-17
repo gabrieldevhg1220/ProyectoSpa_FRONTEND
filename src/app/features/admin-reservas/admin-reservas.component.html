@@ -41,6 +41,16 @@
               <option value="COMPLETADA">Completada</option>
             </select>
           </div>
+          <div class="col-md-4 mb-3">
+            <label for="medioPago" class="form-label">Medio de Pago</label>
+            <select class="form-select" id="medioPago" [(ngModel)]="newReserva.medioPago" name="medioPago" required>
+              <option value="" disabled selected>Seleccione un medio de pago</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+              <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+              <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+            </select>
+          </div>
         </div>
         <div class="d-flex gap-3">
           <button type="submit" class="btn-custom">Agregar Reserva</button>
@@ -82,6 +92,7 @@
             <th>Fecha</th>
             <th>Servicio</th>
             <th>Estado</th>
+            <th>Medio de Pago</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -101,13 +112,14 @@
                 'bg-secondary': reserva.status === 'COMPLETADA'
               }">{{ reserva.status }}</span>
             </td>
+            <td>{{ reserva.medioPago }}</td>
             <td>
               <button class="btn btn-sm btn-warning-custom me-2" (click)="editReserva(reserva)" data-bs-toggle="modal" data-bs-target="#editReservaModal">Editar</button>
               <button class="btn btn-sm btn-danger-custom" (click)="deleteReserva(reserva.id)">Eliminar</button>
             </td>
           </tr>
           <tr *ngIf="filteredReservas.length === 0">
-            <td colspan="8" class="text-center">No hay reservas registradas.</td>
+            <td colspan="9" class="text-center">No hay reservas registradas.</td>
           </tr>
         </tbody>
       </table>
@@ -156,6 +168,16 @@
                 <option value="CONFIRMADA">Confirmada</option>
                 <option value="CANCELADA">Cancelada</option>
                 <option value="COMPLETADA">Completada</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editMedioPago" class="form-label">Medio de Pago</label>
+              <select class="form-select" id="editMedioPago" [(ngModel)]="editingReserva.medioPago" name="editMedioPago" required>
+                <option value="" disabled>Seleccione un medio de pago</option>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+                <option value="TRANSFERENCIA">Transferencia Bancaria</option>
               </select>
             </div>
             <button type="submit" class="btn-custom w-100">Actualizar Reserva</button>

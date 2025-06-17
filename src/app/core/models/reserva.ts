@@ -8,5 +8,6 @@ export interface Reserva {
   fechaReserva: string;
   servicio: string;
   status: string;
+  medioPago: string;
   historial?: string;
 }

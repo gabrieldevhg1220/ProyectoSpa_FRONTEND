@@ -28,7 +28,8 @@ export class AdminReservasComponent implements OnInit {
     empleado: {} as Empleado,
     fechaReserva: '',
     servicio: '',
-    status: 'PENDIENTE'
+    status: 'PENDIENTE',
+    medioPago: 'EFECTIVO' // Valor por defecto
   };
   editingReserva: Reserva | null = null;
   selectedClienteId: number | null = null;
@@ -141,7 +142,8 @@ export class AdminReservasComponent implements OnInit {
       empleado: { id: this.selectedEmpleadoId },
       fechaReserva: this.newReserva.fechaReserva,
       servicio: this.newReserva.servicio,
-      status: this.newReserva.status
+      status: this.newReserva.status,
+      medioPago: this.newReserva.medioPago
     };
 
     this.reservaService.createReserva(reservaData).subscribe({
@@ -248,7 +250,8 @@ export class AdminReservasComponent implements OnInit {
       empleado: {} as Empleado,
       fechaReserva: '',
       servicio: '',
-      status: 'PENDIENTE'
+      status: 'PENDIENTE',
+      medioPago: 'EFECTIVO' // Valor por defecto
     };
     this.selectedClienteId = null;
     this.selectedEmpleadoId = null;

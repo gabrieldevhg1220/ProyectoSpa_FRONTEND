@@ -23,6 +23,16 @@
           <option *ngFor="let empleado of empleados" [value]="empleado.id">{{ empleado.nombre }} {{ empleado.apellido }} ({{ getReadableRole(empleado.rol) }})</option>
         </select>
       </div>
+      <div class="mb-3">
+        <label for="medioPago" class="form-label text-dark">Medio de Pago</label>
+        <select class="form-control" id="medioPago" [(ngModel)]="nuevaReserva.medioPago" name="medioPago" required>
+          <option value="" disabled selected>Seleccione un medio de pago</option>
+          <option value="EFECTIVO">Efectivo</option>
+          <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+          <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+          <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+        </select>
+      </div>
       <button type="button" class="btn btn-primary btn-custom" (click)="createReserva()">Crear Reserva</button>
     </form>
   </div>
@@ -40,6 +50,7 @@
             <th class="text-dark">Servicio</th>
             <th class="text-dark">Fecha y Hora</th>
             <th class="text-dark">Estado</th>
+            <th class="text-dark">Medio de Pago</th>
           </tr>
         </thead>
         <tbody>
@@ -47,6 +58,7 @@
             <td class="text-dark">{{ reserva.servicio }}</td>
             <td class="text-dark">{{ reserva.fechaReserva | date:'medium' }}</td>
             <td class="text-dark">{{ reserva.status || 'PENDIENTE' }}</td>
+            <td class="text-dark">{{ reserva.medioPago || 'No especificado' }}</td>
           </tr>
         </tbody>
       </table>

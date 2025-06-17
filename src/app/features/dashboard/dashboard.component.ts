@@ -26,7 +26,8 @@ export class DashboardComponent implements OnInit {
     empleado: {} as Empleado,
     fechaReserva: '',
     servicio: '',
-    status: ''
+    status: 'PENDIENTE',
+    medioPago: 'EFECTIVO' // Añadir medioPago
   };
 
   selectedEmpleadoId: number | null = null;
@@ -120,12 +121,12 @@ export class DashboardComponent implements OnInit {
     console.log('Token:', this.authService.getToken());
 
     if (!clienteId) {
-      alert('Debes iniciar sesión para crear una reserva.');
+      this.toastr.error('Debes iniciar sesión para crear una reserva.', 'Error');
       return;
     }
 
-    if (!this.nuevaReserva.servicio || !this.nuevaReserva.fechaReserva || !this.selectedEmpleadoId) {
-      alert('Por favor, completa todos los campos requeridos.');
+    if (!this.nuevaReserva.servicio || !this.nuevaReserva.fechaReserva || !this.selectedEmpleadoId || !this.nuevaReserva.medioPago) {
+      this.toastr.error('Por favor, completa todos los campos requeridos.', 'Error');
       return;
     }
 
@@ -134,7 +135,8 @@ export class DashboardComponent implements OnInit {
       empleado: { id: this.selectedEmpleadoId },
       fechaReserva: this.nuevaReserva.fechaReserva,
       servicio: this.nuevaReserva.servicio,
-      status: 'PENDIENTE'
+      status: 'PENDIENTE',
+      medioPago: this.nuevaReserva.medioPago // Añadir medioPago
     };
     
     console.log('Enviando datos de reserva:', reservaData);
@@ -168,7 +170,8 @@ export class DashboardComponent implements OnInit {
           },
           fechaReserva: this.nuevaReserva.fechaReserva,
           servicio: this.nuevaReserva.servicio,
-          status: 'PENDIENTE'
+          status: 'PENDIENTE',
+          medioPago: this.nuevaReserva.medioPago // Añadir medioPago
         };
         this.reservas.push(nuevaReservaCompleta);
 
@@ -178,13 +181,14 @@ export class DashboardComponent implements OnInit {
           empleado: { dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' } as Empleado,
           fechaReserva: '',
           servicio: '',
-          status: ''
+          status: 'PENDIENTE',
+          medioPago: 'EFECTIVO' // Añadir medioPago
         };
         this.selectedEmpleadoId = null;
       },
       error: (error) => {
         console.error('Error al crear la reserva:', error);
-        this.toastr.error(error.error?.message || 'Error al crear la reserva. Por favor, intenta de nuevo.');
+        this.toastr.error(error.error?.message || 'Error al crear la reserva. Por favor, intenta de nuevo.', 'Error');
       }
     });
   }
