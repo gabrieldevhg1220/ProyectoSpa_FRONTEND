@@ -24,17 +24,20 @@ export class ReservaComponent implements OnInit {
   servicioDetails: { nombre: string, precio: number } | null = null;
   clienteData: any = null;
   formularioDeshabilitado: boolean = false;
-  show48HoursWarning: boolean = false; // Nueva propiedad para controlar el mensaje
-  medioPago: string = ''; // Nuevo campo para el medio de pago
+  show48HoursWarning: boolean = false;
+  medioPago: string = '';
+  precioFinal: number | null = null;
+  showDiscountMessage: boolean = false;
+  descuentoAplicado: number = 0;
 
   serviciosIndividuales = [
     {
       categoria: 'Masajes',
       items: [
         { nombre: 'Anti-stress', descripcion: 'Un masaje relajante para aliviar el estrés.', precio: 5000, imagen: 'assets/images/anti-stress.jpg', enum: 'ANTI_STRESS' },
-        { nombre: 'Descontracturantes', descripcion: 'Ideal para aliviar tensiones musculares.', precio: 5500, imagen: 'assets/images/descontracturante.jpg', enum: 'DESCONTRACTURANTE' },
+        { nombre: 'Descontracturante', descripcion: 'Ideal para aliviar tensiones musculares.', precio: 5500, imagen: 'assets/images/descontracturante.jpg', enum: 'DESCONTRACTURANTE' },
         { nombre: 'Masajes con piedras calientes', descripcion: 'Relajación profunda con piedras calientes.', precio: 6000, imagen: 'assets/images/piedras-calientes.jpg', enum: 'PIEDRAS_CALIENTES' },
-        { nombre: 'Circulatorios', descripcion: 'Mejora la circulación y reduce la retención de líquidos.', precio: 5200, imagen: 'assets/images/circulatorio.jpg', enum: 'CIRCULATORIO' }
+        { nombre: 'Circulatorio', descripcion: 'Mejora la circulación y reduce la retención de líquidos.', precio: 5000, imagen: 'assets/images/circulatorio.jpg', enum: 'CIRCULATORIO' }
       ]
     },
     {
@@ -42,23 +45,23 @@ export class ReservaComponent implements OnInit {
       items: [
         { nombre: 'Lifting de pestañas', descripcion: 'Realza tus pestañas con un efecto natural.', precio: 3500, imagen: 'assets/images/lifting-pestanas.jpg', enum: 'LIFTING_PESTANAS' },
         { nombre: 'Depilación facial', descripcion: 'Elimina el vello facial con técnicas suaves.', precio: 2000, imagen: 'assets/images/depilacionfacial.jpg', enum: 'DEPILACION_FACIAL' },
-        { nombre: 'Belleza de manos y pies', descripcion: 'Manicura y pedicura para un cuidado completo.', precio: 4000, imagen: 'assets/images/belleza-manos-pies.jpg', enum: 'BELLEZA_MANOS_PIES' }
+        { nombre: 'Belleza de manos y pies', descripcion: 'Manicura y pedicura para un cuidado completo.', precio: 3000, imagen: 'assets/images/belleza-manos-pies.jpg', enum: 'BELLEZA_MANOS_PIES' }
       ]
     },
     {
       categoria: 'Tratamientos Faciales',
       items: [
-        { nombre: 'Punta de Diamante', descripcion: 'Microexfoliación para una piel renovada.', precio: 4500, imagen: 'assets/images/punta-diamante.jpg', enum: 'PUNTA_DIAMANTE' },
+        { nombre: 'Punta de Diamante', descripcion: 'Microexfoliación para una piel renovada.', precio: 3500, imagen: 'assets/images/punta-diamante.jpg', enum: 'PUNTA_DIAMANTE' },
         { nombre: 'Limpieza profunda + Hidratación', descripcion: 'Limpieza e hidratación para un rostro radiante.', precio: 4800, imagen: 'assets/images/limpieza-profunda.jpg', enum: 'LIMPIEZA_PROFUNDA' },
-        { nombre: 'Crio frecuencia facial', descripcion: 'Efecto lifting instantáneo con shock térmico.', precio: 6000, imagen: 'assets/images/crio-frecuencia-facial.jpg', enum: 'CRIO_FRECUENCIA_FACIAL' }
+        { nombre: 'Crio frecuencia facial', descripcion: 'Efecto lifting instantáneo con shock térmico.', precio: 4800, imagen: 'assets/images/crio-frecuencia-facial.jpg', enum: 'CRIO_FRECUENCIA_FACIAL' }
       ]
     },
     {
       categoria: 'Tratamientos Corporales',
       items: [
-        { nombre: 'VelaSlim', descripcion: 'Reducción de circunferencia corporal y celulitis.', precio: 7000, imagen: 'assets/images/velaslim.jpg', enum: 'VELASLIM' },
-        { nombre: 'DermoHealth', descripcion: 'Drenaje linfático y estimulación de microcirculación.', precio: 6500, imagen: 'assets/images/dermohealth.jpg', enum: 'DERMOHEALTH' },
-        { nombre: 'Criofrecuencia', descripcion: 'Efecto lifting instantáneo para el cuerpo.', precio: 7500, imagen: 'assets/images/criofrecuencia.jpg', enum: 'CRIOFRECUENCIA' },
+        { nombre: 'VelaSlim', descripcion: 'Reducción de circunferencia corporal y celulitis.', precio: 5500, imagen: 'assets/images/velaslim.jpg', enum: 'VELASLIM' },
+        { nombre: 'DermoHealth', descripcion: 'Drenaje linfático y estimulación de microcirculación.', precio: 5500, imagen: 'assets/images/dermohealth.jpg', enum: 'DERMOHEALTH' },
+        { nombre: 'Criofrecuencia', descripcion: 'Efecto lifting instantáneo para el cuerpo.', precio: 6000, imagen: 'assets/images/criofrecuencia.jpg', enum: 'CRIOFRECUENCIA' },
         { nombre: 'Ultracavitación', descripcion: 'Técnica reductora para moldear el cuerpo.', precio: 6800, imagen: 'assets/images/ultracavitacion.jpg', enum: 'ULTRACAVITACION' }
       ]
     }
@@ -108,6 +111,7 @@ export class ReservaComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.servicio = params['servicio'] || null;
       console.log('Servicio desde queryParams:', this.servicio);
+      this.updatePrecio();
     });
 
     const clienteIdString = this.authService.getUserId();
@@ -131,11 +135,11 @@ export class ReservaComponent implements OnInit {
       case 'ESTETICISTA':
         return 'Esteticista';
       case 'TECNICO_ESTETICA_AVANZADA':
-        return 'Estetica Avanzada';
+        return 'Estética Avanzada';
       case 'ESPECIALISTA_CUIDADO_UNAS':
         return 'Cuidado de Uñas';
       case 'MASAJISTA_TERAPEUTICO':
-        return 'Masjista Terapeutico';
+        return 'Masajista Terapéutico';
       case 'TERAPEUTA_SPA':
         return 'Terapeuta en Spa';
       case 'INSTRUCTOR_YOGA':
@@ -147,7 +151,7 @@ export class ReservaComponent implements OnInit {
     }
   }
 
-  private getServicioDetails(servicioEnum: string): { nombre: string, precio: number } | null {
+  public getServicioDetails(servicioEnum: string): { nombre: string, precio: number } | null {
     let servicioItem = null;
     for (const categoria of this.serviciosIndividuales) {
       servicioItem = categoria.items.find(item => item.enum === servicioEnum);
@@ -166,17 +170,51 @@ export class ReservaComponent implements OnInit {
     this.servicio = newValue;
     console.log('Servicio seleccionado:', this.servicio);
     this.updateEmpleadosByServicio(this.servicio || '');
-    this.check48HoursWarning(); // Verificar advertencia al cambiar el servicio
+    this.check48Hours();
+    this.updatePrecio();
   }
 
   onEmpleadoChange(newValue: number | null) {
     this.empleadoId = newValue;
     console.log('Empleado seleccionado:', this.empleadoId);
-    this.check48HoursWarning(); // Verificar advertencia al cambiar el empleado
+    this.check48Hours();
+  }
+
+  onMedioPagoChange(newValue: string) {
+    this.medioPago = newValue;
+    console.log('Medio de pago seleccionado:', this.medioPago);
+    this.updatePrecio();
+  }
+
+  onFechaReservaChange(newValue: string) {
+    this.fechaReserva = newValue;
+    console.log('Fecha de reserva seleccionada:', this.fechaReserva);
+    this.check48Hours();
+    this.updatePrecio();
+  }
+
+  private updatePrecio(): void {
+    this.precioFinal = null;
+    this.showDiscountMessage = false;
+    this.descuentoAplicado = 0;
+
+    if (!this.servicio) return;
+
+    const servicioDetails = this.getServicioDetails(this.servicio);
+    if (!servicioDetails) return;
+
+    let precioBase = servicioDetails.precio;
+    this.precioFinal = precioBase;
+
+    if (this.medioPago === 'TARJETA_DEBITO' && this.fechaReserva && this.isDateWithin48Hours(this.fechaReserva)) {
+      this.descuentoAplicado = 15; // 15% de descuento
+      this.precioFinal = precioBase * 0.85; // 15% de descuento
+      this.showDiscountMessage = true;
+    }
   }
 
   isFormValid(): boolean {
-    console.log('Validando formulario - fechaReserva:', this.fechaReserva, 'empleadoId:', this.empleadoId, 'servicio:', this.servicio, 'empleadosDisponibles.length:', this.empleadosDisponibles.length);
+    console.log('Validando formulario - fechaReserva:', this.fechaReserva, 'empleadoId:', this.empleadoId, 'servicio:', this.servicio, 'empleadosDisponibles.length:', this.empleadosDisponibles.length, 'medioPago:', this.medioPago);
     const isFechaReservaValid = this.fechaReserva.trim().length > 0;
     const isEmpleadoIdValid = this.empleadoId !== null && this.empleadoId > 0;
     const isServicioValid = this.servicio !== null && this.servicio.trim().length > 0;
@@ -184,27 +222,28 @@ export class ReservaComponent implements OnInit {
     const isDateWithin48Hours = this.isDateWithin48Hours(this.fechaReserva);
     const isMedioPagoValid = this.medioPago.trim().length > 0;
     const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable && isDateWithin48Hours && isMedioPagoValid;
-    this.check48HoursWarning(); // Actualizar advertencia después de validar
+    this.check48Hours();
     console.log('Validación resultado:', isValid);
     return isValid;
   }
 
   private isDateWithin48Hours(fechaReserva: string): boolean {
+    if (!fechaReserva) return false;
     const now = new Date();
     const selectedDate = new Date(fechaReserva);
     const diffMs = selectedDate.getTime() - now.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
     console.log('Diferencia en horas:', diffHours);
-    return diffHours >= 48; // True si la diferencia es >= 48 horas
+    return diffHours >= 48;
   }
 
-  private check48HoursWarning(): void {
+  private check48Hours(): void {
     this.show48HoursWarning = this.fechaReserva.trim().length > 0 && !this.isDateWithin48Hours(this.fechaReserva);
   }
 
   getMinDate(): string {
     const now = new Date();
-    return now.toISOString().slice(0, 16); // Formato "2025-06-09T19:26" (24h)
+    return now.toISOString().slice(0, 16);
   }
 
   hacerReserva() {
@@ -219,8 +258,7 @@ export class ReservaComponent implements OnInit {
       return;
     }
 
-    // Usar el valor directo de fechaReserva en formato ISO 24h
-    const fechaFormateada = this.fechaReserva; // Ya está en formato "2025-06-09T19:26"
+    const fechaFormateada = this.fechaReserva;
 
     console.log('Fecha enviada al backend:', fechaFormateada);
 
@@ -230,7 +268,8 @@ export class ReservaComponent implements OnInit {
       fechaReserva: fechaFormateada,
       servicio: this.servicio,
       status: 'CONFIRMADA',
-      medioPago: this.medioPago
+      medioPago: this.medioPago,
+      descuentoAplicado: this.descuentoAplicado // Enviar el descuento al backend
     };
 
     this.reservaService.createReserva(reserva).subscribe({
@@ -245,6 +284,8 @@ export class ReservaComponent implements OnInit {
           this.router.navigate(['/']);
           return;
         }
+        // Usar precioFinal en lugar de depender de response.precioFinal
+        this.servicioDetails.precio = this.precioFinal || this.servicioDetails.precio;
 
         this.clienteService.getClienteByToken().subscribe({
           next: (clienteData) => {
@@ -280,7 +321,7 @@ export class ReservaComponent implements OnInit {
       this.ultimaReserva,
       this.clienteData,
       this.servicioDetails.nombre,
-      this.servicioDetails.precio
+      this.servicioDetails.precio // Ya contiene el precio final
     ).then((invoiceNumber) => {
       this.toastr.success(`Factura ${invoiceNumber} generada y abierta.`, 'Éxito');
     }).catch((error) => {
@@ -292,17 +333,14 @@ export class ReservaComponent implements OnInit {
     const safeServicio = servicio || '';
     this.empleadoService.getEmpleadosForServicio(safeServicio).subscribe({
       next: (empleados) => {
-        // Obtener todos los empleados disponibles
         this.empleadoService.getEmpleadosForReservas().subscribe({
           next: (allEmpleados) => {
-            // Filtrar empleados según el servicio seleccionado
             let filteredEmpleados = empleados;
             if (safeServicio) {
               filteredEmpleados = empleados.filter(empleado =>
                 empleado.rol !== 'GERENTE_GENERAL' && empleado.rol !== 'RECEPCIONISTA' && empleado.rol !== 'COORDINADOR_AREA'
               );
             }
-            // Excluir GERENTE_GENERAL, RECEPCIONISTA y COORDINADOR_AREA de la lista final
             this.empleadosDisponibles = filteredEmpleados.filter(empleado =>
               empleado.rol !== 'GERENTE_GENERAL' && empleado.rol !== 'RECEPCIONISTA' && empleado.rol !== 'COORDINADOR_AREA'
             );
@@ -312,7 +350,7 @@ export class ReservaComponent implements OnInit {
             } else {
               this.toastr.info('No hay especialistas disponibles para este servicio.', 'Información');
             }
-            this.check48HoursWarning(); // Verificar advertencia al actualizar empleados
+            this.check48Hours();
           },
           error: (error) => {
             console.error('Error al obtener todos los empleados:', error);
@@ -322,7 +360,6 @@ export class ReservaComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar los empleados para el servicio:', error);
-        // Mostrar mensaje informativo solo si el servicio está vacío (inicialización)
         if (!safeServicio) {
           this.toastr.success('Se cargó exitosamente la lista de servicios.', 'Éxito');
         } else {

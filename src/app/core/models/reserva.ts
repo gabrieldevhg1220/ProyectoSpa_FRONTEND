@@ -10,4 +10,5 @@ export interface Reserva {
   status: string;
   medioPago: string;
   historial?: string;
+  
 }

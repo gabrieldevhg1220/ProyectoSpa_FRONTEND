@@ -30,7 +30,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
     fechaReserva: '',
     servicio: '',
     status: 'PENDIENTE',
-    medioPago: 'EFECTIVO' // Valor por defecto
+    medioPago: 'EFECTIVO'
   };
   editingReserva: Reserva | null = null;
   reservaCreada: boolean = false;
@@ -46,16 +46,16 @@ export class RecepcionistaDashboardComponent implements OnInit {
     ANTI_STRESS: { nombre: 'Anti-stress', precio: 5000 },
     DESCONTRACTURANTE: { nombre: 'Descontracturantes', precio: 5500 },
     PIEDRAS_CALIENTES: { nombre: 'Masajes con Piedras Calientes', precio: 6000 },
-    CIRCULATORIO: { nombre: 'Circulatorios', precio: 5200 },
+    CIRCULATORIO: { nombre: 'Circulatorios', precio: 5000 },
     LIFTING_PESTANAS: { nombre: 'Lifting de Pestañas', precio: 3500 },
     DEPILACION_FACIAL: { nombre: 'Depilación Facial', precio: 2000 },
-    BELLEZA_MANOS_PIES: { nombre: 'Belleza de Manos y Pies', precio: 4000 },
-    PUNTA_DIAMANTE: { nombre: 'Punta de Diamante', precio: 4500 },
+    BELLEZA_MANOS_PIES: { nombre: 'Belleza de Manos y Pies', precio: 3000 },
+    PUNTA_DIAMANTE: { nombre: 'Punta de Diamante', precio: 3500 },
     LIMPIEZA_PROFUNDA: { nombre: 'Limpieza Profunda + Hidratación', precio: 4800 },
-    CRIO_FRECUENCIA_FACIAL: { nombre: 'Crio Frecuencia Facial', precio: 6000 },
-    VELASLIM: { nombre: 'VelaSlim', precio: 7000 },
-    DERMOHEALTH: { nombre: 'DermoHealth', precio: 6500 },
-    CRIOFRECUENCIA: { nombre: 'Criofrecuencia', precio: 7500 },
+    CRIO_FRECUENCIA_FACIAL: { nombre: 'Crio Frecuencia Facial', precio: 4800 },
+    VELASLIM: { nombre: 'VelaSlim', precio: 5500 },
+    DERMOHEALTH: { nombre: 'DermoHealth', precio: 5500 },
+    CRIOFRECUENCIA: { nombre: 'Criofrecuencia', precio: 6000 },
     ULTRACAVITACION: { nombre: 'Ultracavitación', precio: 6800 },
     HIDROMASAJES: { nombre: 'Hidromasajes', precio: 3000 },
     YOGA: { nombre: 'Yoga', precio: 2500 }
@@ -230,11 +230,13 @@ export class RecepcionistaDashboardComponent implements OnInit {
         this.clienteData = cliente;
         const servicioDetails = this.serviciosList.find(s => s.enum === this.ultimaReserva!.servicio) || 
           { nombre: 'Servicio Desconocido', enum: '', precio: 0 };
+        // Usar precio de servicioMap para reservas de recepcionista (sin descuento)
+        servicioDetails.precio = this.servicioMap[this.ultimaReserva!.servicio]?.precio || servicioDetails.precio;
         this.facturaService.generateFactura(
           this.ultimaReserva,
           this.clienteData,
           servicioDetails.nombre,
-          servicioDetails.precio
+          servicioDetails.precio // Usar servicioDetails.precio en lugar de precio
         ).then((invoiceNumber) => {
           this.toastr.success(`Factura ${invoiceNumber} generada y abierta.`, 'Éxito');
         }).catch((error) => {
@@ -258,7 +260,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
   }
 
   editReserva(reserva: Reserva): void {
-    this.editingReserva = { ...reserva, medioPago: reserva.medioPago || 'EFECTIVO' }; // Valor por defecto si no existe
+    this.editingReserva = { ...reserva, medioPago: reserva.medioPago || 'EFECTIVO' };
     const modalElement = document.getElementById('editReservaModal') as HTMLElement;
     if (modalElement) {
       const modalInstance = new (window as any).bootstrap.Modal(modalElement);
@@ -351,7 +353,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
       fechaReserva: '',
       servicio: '',
       status: 'PENDIENTE',
-      medioPago: 'EFECTIVO' // Valor por defecto
+      medioPago: 'EFECTIVO'
     };
     this.updateEmpleadosByServicio('');
   }

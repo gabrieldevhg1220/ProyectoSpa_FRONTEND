@@ -3,22 +3,18 @@
   <div class="card shadow-lg border-0">
     <div class="card-body p-5">
       <h5 class="card-title mb-4">Nueva Reserva</h5>
-      <!-- <div class="alert alert-info">
-        <strong>Las reservas deben realizarse con 48 Horas de antelación.</strong><br><br>
-      </div> -->
-      <!-- Nuevo mensaje de advertencia dinámico -->
       <div *ngIf="show48HoursWarning" class="alert alert-warning" role="alert">
         <strong>Advertencia:</strong> Debes seleccionar una fecha de reserva con al menos 48 horas de antelación.
       </div>
-      <!-- Texto de depuración -->
-      <!-- <div class="alert alert-info">
-        <strong>Depuración:</strong><br>
-        Servicio: {{ servicio || 'No seleccionado' }}<br>
-        EmpleadoId: {{ empleadoId || 'No seleccionado' }}<br>
-        FechaReserva: {{ fechaReserva || 'No seleccionada' }}<br>
-        Empleados Disponibles: {{ empleadosDisponibles.length }}<br>
-        Formulario Válido: {{ isFormValid() }}
-      </div> -->
+      <div *ngIf="showDiscountMessage" class="alert alert-success" role="alert">
+        <strong>¡Descuento aplicado!</strong> Paga con tarjeta de débito con más de 48 horas de antelación y obtén un 15% de descuento.
+      </div>
+      <div *ngIf="servicio" class="alert alert-info" role="alert">
+        <strong>Precio del servicio:</strong> ${{ getServicioDetails(servicio)?.precio | number:'1.2-2' }}
+        <span *ngIf="showDiscountMessage">
+          <br><strong>Precio con 15% de descuento:</strong> ${{ precioFinal | number:'1.2-2' }}
+        </span>
+      </div>
       <form (ngSubmit)="hacerReserva()" class="reservation-form">
         <div class="row">
           <div class="col-md-6 mb-4">
@@ -32,7 +28,7 @@
           </div>
           <div class="col-md-6 mb-4">
             <label for="fechaReserva" class="form-label">Fecha y Hora</label>
-            <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="fechaReserva" name="fechaReserva" required step="3600" [min]="getMinDate()">
+            <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="fechaReserva" name="fechaReserva" required step="3600" [min]="getMinDate()" (ngModelChange)="onFechaReservaChange($event)">
           </div>
           <div class="col-md-12 mb-4">
             <label for="empleadoId" class="form-label">Seleccionar Especialista</label>
@@ -48,7 +44,7 @@
           </div>
           <div class="col-md-6 mb-4">
             <label for="medioPago" class="form-label">Medio de Pago</label>
-            <select class="form-select" id="medioPago" name="medioPago" [(ngModel)]="medioPago" required>
+            <select class="form-select" id="medioPago" name="medioPago" [(ngModel)]="medioPago" (ngModelChange)="onMedioPagoChange($event)" required>
               <option value="" disabled selected>Seleccione un medio de pago</option>
               <option value="EFECTIVO">Efectivo</option>
               <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
@@ -68,3 +64,4 @@
       </div>
     </div>
   </div>
+</div>
