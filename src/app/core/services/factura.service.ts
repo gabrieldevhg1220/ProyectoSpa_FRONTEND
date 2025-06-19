@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
+import { HttpClient } from '@angular/common/http';
+import { Observable, from, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 
 // Función para cargar y registrar fuentes
 const loadFont = async (doc: jsPDF, fontName: string, fontPath: string) => {
@@ -23,7 +26,10 @@ const loadFont = async (doc: jsPDF, fontName: string, fontPath: string) => {
   providedIn: 'root'
 })
 export class FacturaService {
-  constructor() {}
+
+  private apiUrl = '/api/factura/send-email';
+
+  constructor(private http: HttpClient) {}
 
   async generateFactura(reserva: any, cliente: any, servicioNombre: string, precio: number) {
     const doc = new jsPDF();
@@ -81,14 +87,49 @@ export class FacturaService {
     doc.setFontSize(12);
     doc.text('Gracias por elegir Sentirse Bien!', 105, 150, { align: 'center' });
 
+    // Generar el PDF como Blob y convertir a base64
+    const pdfBlob = doc.output('blob');
+    const pdfBase64 = await this.blobToBase64(pdfBlob);
+
+    // Enviar el PDF al backend para el correo
+    const emailRequest = {
+      toEmail: cliente.email || 'N/A',
+      subject: `Comprobante de Pago - Factura ${invoiceNumber}`,
+      body: `Estimado/a ${cliente.nombre || 'Cliente'},\n\nAdjunto encontrarás el comprobante de pago correspondiente a tu reserva.\n\nDetalles:\n- Factura: ${invoiceNumber}\n- Servicio: ${servicioNombre}\n- Fecha de Reserva: ${fechaReserva}\n- Precio: $${precio}\n\nGracias por elegir Sentirse Bien!\n\nSaludos,\nEquipo Sentirse Bien`,
+      attachmentBase64: pdfBase64,
+      attachmentName: `factura_${invoiceNumber}.pdf`
+    };
+
     // Guardar y abrir el PDF
     try {
-      //doc.save(`factura_${invoiceNumber}.pdf`);
       window.open(URL.createObjectURL(new Blob([doc.output('blob')])), '_blank');
+      await this.sendEmail(emailRequest).toPromise();
       return Promise.resolve(invoiceNumber);
     } catch (error) {
       console.error('Error al generar el PDF:', error);
       return Promise.reject(new Error('No se pudo generar la factura. Verifica la consola para más detalles. Error: ' + (error as Error).message));
     }
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        // Extraer solo la parte base64 (sin el prefijo data:application/pdf;base64,)
+        resolve(base64data.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private sendEmail(emailRequest: any): Observable<any> {
+    return this.http.post(this.apiUrl, emailRequest).pipe(
+      catchError(error => {
+        console.error('Error al enviar el correo:', error);
+        return throwError(() => new Error('Error al enviar el correo: ' + error.message));
+      })
+    );
   }
 }
