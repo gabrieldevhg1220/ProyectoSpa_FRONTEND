@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
-import jsPDF from 'jspdf';
 import { HttpClient } from '@angular/common/http';
+import jsPDF from 'jspdf';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
+
+// Definir la URL base del backend según el entorno
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://spabackend-wphn.onrender.com';
 
 // Función para cargar y registrar fuentes
 const loadFont = async (doc: jsPDF, fontName: string, fontPath: string) => {
@@ -26,8 +29,7 @@ const loadFont = async (doc: jsPDF, fontName: string, fontPath: string) => {
   providedIn: 'root'
 })
 export class FacturaService {
-
-  private apiUrl = '/api/factura/send-email';
+  private apiUrl = `${API_BASE_URL}/api/factura/send-invoice`;
 
   constructor(private http: HttpClient) {}
 
@@ -66,7 +68,7 @@ export class FacturaService {
     doc.text(`Número de Factura: ${invoiceNumber}`, 150, 30, { align: 'right' });
     doc.text(`Fecha de Emisión: ${currentDate}`, 150, 35, { align: 'right' });
 
-    doc.setFont('Roboto-Medium.ttf'); // Usar fuente bold
+    doc.setFont('Roboto-Medium.ttf');
     doc.setFontSize(16);
     doc.text('Datos del Cliente', 20, 50);
 
@@ -91,23 +93,26 @@ export class FacturaService {
     const pdfBlob = doc.output('blob');
     const pdfBase64 = await this.blobToBase64(pdfBlob);
 
+    // Validar correo del cliente
+    if (!cliente.email || cliente.email === 'N/A') {
+      return Promise.reject(new Error('El cliente no tiene un correo válido.'));
+    }
+
     // Enviar el PDF al backend para el correo
-    const emailRequest = {
-      toEmail: cliente.email || 'N/A',
-      subject: `Comprobante de Pago - Factura ${invoiceNumber}`,
-      body: `Estimado/a ${cliente.nombre || 'Cliente'},\n\nAdjunto encontrarás el comprobante de pago correspondiente a tu reserva.\n\nDetalles:\n- Factura: ${invoiceNumber}\n- Servicio: ${servicioNombre}\n- Fecha de Reserva: ${fechaReserva}\n- Precio: $${precio}\n\nGracias por elegir Sentirse Bien!\n\nSaludos,\nEquipo Sentirse Bien`,
-      attachmentBase64: pdfBase64,
-      attachmentName: `factura_${invoiceNumber}.pdf`
+    const invoiceRequest = {
+      email: cliente.email,
+      invoiceNumber: invoiceNumber,
+      attachmentBase64: pdfBase64
     };
 
     // Guardar y abrir el PDF
     try {
-      window.open(URL.createObjectURL(new Blob([doc.output('blob')])), '_blank');
-      await this.sendEmail(emailRequest).toPromise();
+      window.open(URL.createObjectURL(pdfBlob), '_blank');
+      await this.sendInvoice(invoiceRequest).toPromise();
       return Promise.resolve(invoiceNumber);
     } catch (error) {
-      console.error('Error al generar el PDF:', error);
-      return Promise.reject(new Error('No se pudo generar la factura. Verifica la consola para más detalles. Error: ' + (error as Error).message));
+      console.error('Error al generar o enviar la factura:', error);
+      return Promise.reject(new Error('No se pudo generar o enviar la factura. Verifica la consola para más detalles. Error: ' + (error as Error).message));
     }
   }
 
@@ -116,7 +121,6 @@ export class FacturaService {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64data = reader.result as string;
-        // Extraer solo la parte base64 (sin el prefijo data:application/pdf;base64,)
         resolve(base64data.split(',')[1]);
       };
       reader.onerror = reject;
@@ -124,8 +128,8 @@ export class FacturaService {
     });
   }
 
-  private sendEmail(emailRequest: any): Observable<any> {
-    return this.http.post(this.apiUrl, emailRequest).pipe(
+  private sendInvoice(invoiceRequest: any): Observable<any> {
+    return this.http.post(this.apiUrl, invoiceRequest).pipe(
       catchError(error => {
         console.error('Error al enviar el correo:', error);
         return throwError(() => new Error('Error al enviar el correo: ' + error.message));
