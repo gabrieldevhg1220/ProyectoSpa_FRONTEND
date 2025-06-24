@@ -4,15 +4,12 @@ import jsPDF from 'jspdf';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 
-// Definir la URL base del backend según el entorno
 const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://spabackend-wphn.onrender.com';
 
-// Función para cargar y registrar fuentes
 const loadFont = async (doc: jsPDF, fontName: string, fontPath: string) => {
   const response = await fetch(fontPath);
   const arrayBuffer = await response.arrayBuffer();
   const fontData = new Uint8Array(arrayBuffer);
-  // Convertir Uint8Array a base64
   let binary = '';
   const bytes = new Uint8Array(fontData);
   const len = bytes.byteLength;
@@ -33,34 +30,19 @@ export class FacturaService {
 
   constructor(private http: HttpClient) {}
 
-  async generateFactura(reserva: any, cliente: any, servicioNombre: string, precio: number) {
+  async generateFactura(reserva: any, cliente: any, serviciosNombre: string, precioTotal: number) {
     const doc = new jsPDF();
 
-    // Cargar las fuentes Roboto
     const fontRegular = await loadFont(doc, 'Roboto-Regular.ttf', 'assets/fonts/Roboto-Regular.ttf');
     const fontBold = await loadFont(doc, 'Roboto-Medium.ttf', 'assets/fonts/Roboto-Medium.ttf');
     const fontItalic = await loadFont(doc, 'Roboto-Italic.ttf', 'assets/fonts/Roboto-Italic.ttf');
     const fontBoldItalic = await loadFont(doc, 'Roboto-MediumItalic.ttf', 'assets/fonts/Roboto-MediumItalic.ttf');
 
-    // Establecer la fuente predeterminada
     doc.setFont(fontRegular);
 
-    const invoiceNumber = `INV-${Date.now()}`;
-    const currentDate = new Date().toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    const invoiceNumber = `INV-${new Date(reserva.fechaReserva).toISOString().split('T')[0].replace(/-/g, '')}`;
+    const currentDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    const fechaReserva = new Date(reserva.fechaReserva).toLocaleString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    // Configurar el contenido del PDF
     doc.setFontSize(22);
     doc.text('Factura - Sentirse Bien', 105, 20, { align: 'center' });
 
@@ -82,37 +64,36 @@ export class FacturaService {
     doc.text('Detalles de la Reserva', 20, 90);
 
     doc.setFont(fontRegular);
-    doc.text(`Servicio: ${servicioNombre || 'N/A'}`, 20, 100);
-    doc.text(`Fecha y Hora de Reserva: ${fechaReserva}`, 20, 105);
-    doc.text(`Precio: $${precio || 0}`, 20, 110);
+    let y = 100;
+    doc.text(`Fecha: ${new Date(reserva.fechaReserva).toLocaleDateString('es-AR')}`, 20, y);
+    y += 10;
+    doc.text(`Servicios: ${serviciosNombre}`, 20, y);
+    y += 10;
+    doc.text(`Total: $${precioTotal || 0}`, 20, y);
 
     doc.setFontSize(12);
-    doc.text('Gracias por elegir Sentirse Bien!', 105, 150, { align: 'center' });
+    doc.text('Gracias por elegir Sentirse Bien!', 105, y + 30, { align: 'center' });
 
-    // Generar el PDF como Blob y convertir a base64
     const pdfBlob = doc.output('blob');
     const pdfBase64 = await this.blobToBase64(pdfBlob);
 
-    // Validar correo del cliente
     if (!cliente.email || cliente.email === 'N/A') {
       return Promise.reject(new Error('El cliente no tiene un correo válido.'));
     }
 
-    // Enviar el PDF al backend para el correo
     const invoiceRequest = {
       email: cliente.email,
       invoiceNumber: invoiceNumber,
       attachmentBase64: pdfBase64
     };
 
-    // Guardar y abrir el PDF
     try {
       window.open(URL.createObjectURL(pdfBlob), '_blank');
       await this.sendInvoice(invoiceRequest).toPromise();
       return Promise.resolve(invoiceNumber);
     } catch (error) {
       console.error('Error al generar o enviar la factura:', error);
-      return Promise.reject(new Error('No se pudo generar o enviar la factura. Verifica la consola para más detalles. Error: ' + (error as Error).message));
+      return Promise.reject(new Error('Error al generar o enviar la factura: ' + (error as Error).message));
     }
   }
 
@@ -129,7 +110,9 @@ export class FacturaService {
   }
 
   private sendInvoice(invoiceRequest: any): Observable<any> {
-    return this.http.post(this.apiUrl, invoiceRequest).pipe(
+    return this.http.post(this.apiUrl, invoiceRequest, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('jwt')}` }
+    }).pipe(
       catchError(error => {
         console.error('Error al enviar el correo:', error);
         return throwError(() => new Error('Error al enviar el correo: ' + error.message));

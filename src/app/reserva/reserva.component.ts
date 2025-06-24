@@ -14,21 +14,19 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./reserva.component.scss']
 })
 export class ReservaComponent implements OnInit {
-  servicio: string | null = null;
-  fechaReserva: string = '';
-  empleadoId: number | null = null;
+  serviciosSeleccionados: { servicio: string | null, fechaServicio: string, empleadoId: number | null }[] = [{ servicio: null, fechaServicio: '', empleadoId: null }];
   clienteId: number | null = null;
-  empleadosDisponibles: any[] = [];
+  empleadosDisponibles: Map<string, any[]> = new Map();
   reservaCreada: boolean = false;
   ultimaReserva: any = null;
-  servicioDetails: { nombre: string, precio: number } | null = null;
+  serviciosDetails: Map<string, { nombre: string, precio: number }> = new Map();
   clienteData: any = null;
   formularioDeshabilitado: boolean = false;
-  show48HoursWarning: boolean = false;
+  show48HoursWarning: boolean[] = [];
   medioPago: string = '';
-  precioFinal: number | null = null;
-  showDiscountMessage: boolean = false;
-  descuentoAplicado: number = 0;
+  preciosFinales: Map<string, number> = new Map();
+  showDiscountMessage: boolean[] = [];
+  descuentosAplicados: Map<string, number> = new Map();
 
   serviciosIndividuales = [
     {
@@ -108,12 +106,6 @@ export class ReservaComponent implements OnInit {
     });
     console.log('Servicios locales cargados:', this.serviciosList);
 
-    this.route.queryParams.subscribe(params => {
-      this.servicio = params['servicio'] || null;
-      console.log('Servicio desde queryParams:', this.servicio);
-      this.updatePrecio();
-    });
-
     const clienteIdString = this.authService.getUserId();
     this.clienteId = clienteIdString ? parseInt(clienteIdString, 10) : null;
     if (!this.clienteId || !this.authService.isLoggedIn()) {
@@ -127,27 +119,21 @@ export class ReservaComponent implements OnInit {
       return;
     }
 
-    this.updateEmpleadosByServicio(this.servicio || '');
+    this.serviciosSeleccionados.forEach((_, index) => this.updateEmpleadosByServicio(null, index));
+    this.show48HoursWarning = this.serviciosSeleccionados.map(() => false);
+    this.showDiscountMessage = this.serviciosSeleccionados.map(() => false);
   }
 
   simplificarRol(rol: string): string {
     switch (rol) {
-      case 'ESTETICISTA':
-        return 'Esteticista';
-      case 'TECNICO_ESTETICA_AVANZADA':
-        return 'Estética Avanzada';
-      case 'ESPECIALISTA_CUIDADO_UNAS':
-        return 'Cuidado de Uñas';
-      case 'MASAJISTA_TERAPEUTICO':
-        return 'Masajista Terapéutico';
-      case 'TERAPEUTA_SPA':
-        return 'Terapeuta en Spa';
-      case 'INSTRUCTOR_YOGA':
-        return 'Instructor/a de Yoga';
-      case 'NUTRICIONISTA':
-        return 'Nutricionista';
-      default:
-        return rol;
+      case 'ESTETICISTA': return 'Esteticista';
+      case 'TECNICO_ESTETICA_AVANZADA': return 'Estética Avanzada';
+      case 'ESPECIALISTA_CUIDADO_UNAS': return 'Cuidado de Uñas';
+      case 'MASAJISTA_TERAPEUTICO': return 'Masajista Terapéutico';
+      case 'TERAPEUTA_SPA': return 'Terapeuta en Spa';
+      case 'INSTRUCTOR_YOGA': return 'Instructor/a de Yoga';
+      case 'NUTRICIONISTA': return 'Nutricionista';
+      default: return rol;
     }
   }
 
@@ -166,79 +152,82 @@ export class ReservaComponent implements OnInit {
     return servicioItem ? { nombre: servicioItem.nombre, precio: servicioItem.precio } : null;
   }
 
-  onServicioChange(newValue: string | null) {
-    this.servicio = newValue;
-    console.log('Servicio seleccionado:', this.servicio);
-    this.updateEmpleadosByServicio(this.servicio || '');
-    this.check48Hours();
-    this.updatePrecio();
+  onServicioChange(servicio: string | null, index: number) {
+    this.serviciosSeleccionados[index].servicio = servicio;
+    console.log(`Servicio seleccionado en índice ${index}:`, servicio);
+    this.updateEmpleadosByServicio(servicio, index);
+    this.check48Hours(index);
+    this.updatePrecio(index);
   }
 
-  onEmpleadoChange(newValue: number | null) {
-    this.empleadoId = newValue;
-    console.log('Empleado seleccionado:', this.empleadoId);
-    this.check48Hours();
+  onEmpleadoChange(empleadoId: number | null, index: number) {
+    this.serviciosSeleccionados[index].empleadoId = empleadoId;
+    console.log(`Empleado seleccionado en índice ${index}:`, empleadoId);
+    this.check48Hours(index);
   }
 
   onMedioPagoChange(newValue: string) {
     this.medioPago = newValue;
     console.log('Medio de pago seleccionado:', this.medioPago);
-    this.updatePrecio();
+    this.serviciosSeleccionados.forEach((_, index) => this.updatePrecio(index));
   }
 
-  onFechaReservaChange(newValue: string) {
-    this.fechaReserva = newValue;
-    console.log('Fecha de reserva seleccionada:', this.fechaReserva);
-    this.check48Hours();
-    this.updatePrecio();
+  onFechaServicioChange(fecha: string, index: number) {
+    this.serviciosSeleccionados[index].fechaServicio = fecha;
+    console.log(`Fecha de servicio seleccionada en índice ${index}:`, fecha);
+    this.check48Hours(index);
+    this.updatePrecio(index);
   }
 
-  private updatePrecio(): void {
-    this.precioFinal = null;
-    this.showDiscountMessage = false;
-    this.descuentoAplicado = 0;
+  private updatePrecio(index: number): void {
+    const servicio = this.serviciosSeleccionados[index].servicio;
+    this.preciosFinales.delete(index.toString());
+    this.showDiscountMessage[index] = false;
+    this.descuentosAplicados.delete(index.toString());
 
-    if (!this.servicio) return;
+    if (!servicio) return;
 
-    const servicioDetails = this.getServicioDetails(this.servicio);
+    const servicioDetails = this.getServicioDetails(servicio);
     if (!servicioDetails) return;
 
     let precioBase = servicioDetails.precio;
-    this.precioFinal = precioBase;
+    let precioFinal = precioBase;
+    let descuentoAplicado = 0;
 
-    if (this.medioPago === 'TARJETA_DEBITO' && this.fechaReserva && this.isDateWithin48Hours(this.fechaReserva)) {
-      this.descuentoAplicado = 15; // 15% de descuento
-      this.precioFinal = precioBase * 0.85; // 15% de descuento
-      this.showDiscountMessage = true;
+    if (this.medioPago === 'TARJETA_DEBITO' && this.serviciosSeleccionados[index].fechaServicio && this.isDateWithin48Hours(this.serviciosSeleccionados[index].fechaServicio)) {
+      descuentoAplicado = 15;
+      precioFinal = precioBase * 0.85;
+      this.showDiscountMessage[index] = true;
     }
+
+    this.preciosFinales.set(index.toString(), precioFinal);
+    this.serviciosDetails.set(index.toString(), servicioDetails);
+    this.descuentosAplicados.set(index.toString(), descuentoAplicado);
   }
 
   isFormValid(): boolean {
-    console.log('Validando formulario - fechaReserva:', this.fechaReserva, 'empleadoId:', this.empleadoId, 'servicio:', this.servicio, 'empleadosDisponibles.length:', this.empleadosDisponibles.length, 'medioPago:', this.medioPago);
-    const isFechaReservaValid = this.fechaReserva.trim().length > 0;
-    const isEmpleadoIdValid = this.empleadoId !== null && this.empleadoId > 0;
-    const isServicioValid = this.servicio !== null && this.servicio.trim().length > 0;
-    const isEmpleadosAvailable = this.empleadosDisponibles.length > 0;
-    const isDateWithin48Hours = this.isDateWithin48Hours(this.fechaReserva);
-    const isMedioPagoValid = this.medioPago.trim().length > 0;
-    const isValid = isFechaReservaValid && isEmpleadoIdValid && isServicioValid && isEmpleadosAvailable && isDateWithin48Hours && isMedioPagoValid;
-    this.check48Hours();
-    console.log('Validación resultado:', isValid);
-    return isValid;
+    return this.serviciosSeleccionados.every((s, index) => {
+      const isFechaValid = s.fechaServicio.trim().length > 0;
+      const isEmpleadoValid = s.empleadoId !== null && s.empleadoId > 0;
+      const isServicioValid = s.servicio !== null && s.servicio.trim().length > 0;
+      const isEmpleadosAvailable = (this.empleadosDisponibles.get(index.toString()) || []).length > 0;
+      const isDateWithin48Hours = this.isDateWithin48Hours(s.fechaServicio);
+      const isMedioPagoValid = this.medioPago.trim().length > 0;
+      return isFechaValid && isEmpleadoValid && isServicioValid && isEmpleadosAvailable && isDateWithin48Hours && isMedioPagoValid;
+    });
   }
 
-  private isDateWithin48Hours(fechaReserva: string): boolean {
-    if (!fechaReserva) return false;
+  private isDateWithin48Hours(fechaServicio: string): boolean {
+    if (!fechaServicio) return false;
     const now = new Date();
-    const selectedDate = new Date(fechaReserva);
+    const selectedDate = new Date(fechaServicio);
     const diffMs = selectedDate.getTime() - now.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
-    console.log('Diferencia en horas:', diffHours);
     return diffHours >= 48;
   }
 
-  private check48Hours(): void {
-    this.show48HoursWarning = this.fechaReserva.trim().length > 0 && !this.isDateWithin48Hours(this.fechaReserva);
+  private check48Hours(index: number): void {
+    this.show48HoursWarning[index] = this.serviciosSeleccionados[index].fechaServicio.trim().length > 0 && !this.isDateWithin48Hours(this.serviciosSeleccionados[index].fechaServicio);
   }
 
   getMinDate(): string {
@@ -246,10 +235,26 @@ export class ReservaComponent implements OnInit {
     return now.toISOString().slice(0, 16);
   }
 
+  agregarServicio() {
+    this.serviciosSeleccionados.push({ servicio: null, fechaServicio: '', empleadoId: null });
+    this.show48HoursWarning.push(false);
+    this.showDiscountMessage.push(false);
+    this.updateEmpleadosByServicio(null, this.serviciosSeleccionados.length - 1);
+  }
+
+  eliminarServicio(index: number) {
+    this.serviciosSeleccionados.splice(index, 1);
+    this.show48HoursWarning.splice(index, 1);
+    this.showDiscountMessage.splice(index, 1);
+    this.empleadosDisponibles.delete(index.toString());
+    this.preciosFinales.delete(index.toString());
+    this.serviciosDetails.delete(index.toString());
+    this.descuentosAplicados.delete(index.toString());
+  }
+
   hacerReserva() {
-    console.log('Ejecutando hacerReserva()');
     if (!this.isFormValid()) {
-      this.toastr.warning('Por favor, completa todos los campos requeridos o selecciona una fecha al menos 48 horas antes.', 'Advertencia');
+      this.toastr.warning('Por favor, completa todos los campos requeridos o selecciona fechas al menos 48 horas antes.', 'Advertencia');
       return;
     }
 
@@ -258,18 +263,17 @@ export class ReservaComponent implements OnInit {
       return;
     }
 
-    const fechaFormateada = this.fechaReserva;
-
-    console.log('Fecha enviada al backend:', fechaFormateada);
-
     const reserva = {
-      cliente: { id: this.clienteId },
-      empleado: { id: this.empleadoId },
-      fechaReserva: fechaFormateada,
-      servicio: this.servicio,
-      status: 'CONFIRMADA',
+      clienteId: this.clienteId,
+      empleadoId: this.serviciosSeleccionados[0].empleadoId, // Usar el primer empleado como referencia
+      fechaReserva: this.serviciosSeleccionados[0].fechaServicio, // Usar la primera fecha como referencia
+      servicios: this.serviciosSeleccionados.map(s => ({
+        servicio: s.servicio,
+        fechaServicio: s.fechaServicio
+      })),
+      status: 'PENDIENTE',
       medioPago: this.medioPago,
-      descuentoAplicado: this.descuentoAplicado // Enviar el descuento al backend
+      descuentoAplicado: Math.max(...Array.from(this.descuentosAplicados.values())) // Usar el descuento máximo
     };
 
     this.reservaService.createReserva(reserva).subscribe({
@@ -277,15 +281,7 @@ export class ReservaComponent implements OnInit {
         this.toastr.success('Reserva creada exitosamente.', 'Éxito');
         this.ultimaReserva = response;
         this.formularioDeshabilitado = true;
-
-        this.servicioDetails = this.getServicioDetails(this.servicio!);
-        if (!this.servicioDetails) {
-          this.toastr.error('No se encontraron los detalles del servicio para generar la factura.', 'Error');
-          this.router.navigate(['/']);
-          return;
-        }
-        // Usar precioFinal en lugar de depender de response.precioFinal
-        this.servicioDetails.precio = this.precioFinal || this.servicioDetails.precio;
+        this.reservaCreada = true;
 
         this.clienteService.getClienteByToken().subscribe({
           next: (clienteData) => {
@@ -295,7 +291,6 @@ export class ReservaComponent implements OnInit {
               dni: clienteData.dni || 'N/A',
               email: clienteData.email || 'N/A'
             };
-            this.reservaCreada = true;
           },
           error: (error) => {
             this.toastr.error('Error al obtener los datos del cliente para la factura.', 'Error');
@@ -311,25 +306,36 @@ export class ReservaComponent implements OnInit {
   }
 
   generarFactura() {
-    console.log('Ejecutando generarFactura()');
-    if (!this.ultimaReserva || !this.servicioDetails || !this.clienteData) {
+    if (!this.ultimaReserva || !this.clienteData) {
       this.toastr.error('No hay datos suficientes para generar la factura.', 'Error');
       return;
     }
 
-    this.facturaService.generateFactura(
-      this.ultimaReserva,
-      this.clienteData,
-      this.servicioDetails.nombre,
-      this.servicioDetails.precio // Ya contiene el precio final
-    ).then((invoiceNumber) => {
-      this.toastr.success(`Factura ${invoiceNumber} generada y abierta.`, 'Éxito');
-    }).catch((error) => {
-      this.toastr.error(error.message || 'Error al generar la factura. Por favor, intenta de nuevo.', 'Error');
+    // Agrupar servicios por fecha
+    const serviciosPorDia = this.serviciosSeleccionados.reduce((acc, s, index) => {
+      const fecha = new Date(s.fechaServicio).toISOString().split('T')[0];
+      if (!acc[fecha]) acc[fecha] = [];
+      acc[fecha].push({ servicio: s.servicio!, precio: this.preciosFinales.get(index.toString())!, nombre: this.serviciosDetails.get(index.toString())!.nombre });
+      return acc;
+    }, {} as { [key: string]: { servicio: string, precio: number, nombre: string }[] });
+
+    // Generar una factura por día
+    Object.entries(serviciosPorDia).forEach(([fecha, servicios]) => {
+      const total = servicios.reduce((sum, s) => sum + s.precio, 0);
+      this.facturaService.generateFactura(
+        { fechaReserva: fecha, servicios },
+        this.clienteData,
+        servicios.map(s => s.nombre).join(', '),
+        total
+      ).then((invoiceNumber) => {
+        this.toastr.success(`Factura ${invoiceNumber} generada y abierta para el ${fecha}.`, 'Éxito');
+      }).catch((error) => {
+        this.toastr.error(error.message || `Error al generar la factura para el ${fecha}.`, 'Error');
+      });
     });
   }
 
-  updateEmpleadosByServicio(servicio: string): void {
+  updateEmpleadosByServicio(servicio: string | null, index: number): void {
     const safeServicio = servicio || '';
     this.empleadoService.getEmpleadosForServicio(safeServicio).subscribe({
       next: (empleados) => {
@@ -341,16 +347,14 @@ export class ReservaComponent implements OnInit {
                 empleado.rol !== 'GERENTE_GENERAL' && empleado.rol !== 'RECEPCIONISTA' && empleado.rol !== 'COORDINADOR_AREA'
               );
             }
-            this.empleadosDisponibles = filteredEmpleados.filter(empleado =>
-              empleado.rol !== 'GERENTE_GENERAL' && empleado.rol !== 'RECEPCIONISTA' && empleado.rol !== 'COORDINADOR_AREA'
-            );
-            console.log('Empleados disponibles actualizados:', this.empleadosDisponibles);
-            if (this.empleadosDisponibles.length > 0) {
+            this.empleadosDisponibles.set(index.toString(), filteredEmpleados);
+            console.log(`Empleados disponibles actualizados para índice ${index}:`, filteredEmpleados);
+            if (filteredEmpleados.length > 0) {
               this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
             } else {
               this.toastr.info('No hay especialistas disponibles para este servicio.', 'Información');
             }
-            this.check48Hours();
+            this.check48Hours(index);
           },
           error: (error) => {
             console.error('Error al obtener todos los empleados:', error);
@@ -365,7 +369,7 @@ export class ReservaComponent implements OnInit {
         } else {
           this.toastr.error('Error al cargar los empleados para el servicio seleccionado.', 'Error');
         }
-        this.empleadosDisponibles = [];
+        this.empleadosDisponibles.set(index.toString(), []);
       }
     });
   }

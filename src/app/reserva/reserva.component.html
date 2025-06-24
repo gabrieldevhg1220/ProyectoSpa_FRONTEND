@@ -3,48 +3,56 @@
   <div class="card shadow-lg border-0">
     <div class="card-body p-5">
       <h5 class="card-title mb-4">Nueva Reserva</h5>
-      <div *ngIf="show48HoursWarning" class="alert alert-warning" role="alert">
-        <strong>Advertencia:</strong> Debes seleccionar una fecha de reserva con al menos 48 horas de antelación.
+      <div *ngFor="let servicio of serviciosSeleccionados; let i = index">
+        <div *ngIf="show48HoursWarning[i]" class="alert alert-warning" role="alert">
+          <strong>Advertencia:</strong> Debes seleccionar una fecha de servicio con al menos 48 horas de antelación.
+        </div>
+        <div *ngIf="showDiscountMessage[i]" class="alert alert-success" role="alert">
+          <strong>¡Descuento aplicado!</strong> Paga con tarjeta de débito con más de 48 horas de antelación y obtén un 15% de descuento.
+        </div>
+        <div *ngIf="servicio.servicio" class="alert alert-info" role="alert">
+          <strong>Precio del servicio:</strong> ${{ getServicioDetails(servicio.servicio)?.precio | number:'1.2-2' }}
+          <span *ngIf="showDiscountMessage[i]">
+            <br><strong>Precio con 15% de descuento:</strong> ${{ preciosFinales.get(i.toString()) | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-5 mb-3">
+            <label [for]="'servicio-' + i" class="form-label">Servicio</label>
+            <select class="form-select" [id]="'servicio-' + i" [(ngModel)]="servicio.servicio" (ngModelChange)="onServicioChange($event, i)" required>
+              <option [ngValue]="null" disabled selected>Seleccione un servicio</option>
+              <option *ngFor="let s of serviciosList" [ngValue]="s.enum">{{ s.nombre }}</option>
+            </select>
+          </div>
+          <div class="col-md-5 mb-3">
+            <label [for]="'fechaServicio-' + i" class="form-label">Fecha y Hora</label>
+            <input type="datetime-local" class="form-control" [id]="'fechaServicio-' + i" [(ngModel)]="servicio.fechaServicio" (ngModelChange)="onFechaServicioChange($event, i)" required step="3600" [min]="getMinDate()">
+          </div>
+          <div class="col-md-2 mb-3 d-flex align-items-end">
+            <button type="button" class="btn btn-danger" (click)="eliminarServicio(i)" *ngIf="serviciosSeleccionados.length > 1">Eliminar</button>
+          </div>
+          <div class="col-md-12 mb-3">
+            <label [for]="'empleadoId-' + i" class="form-label">Seleccionar Especialista</label>
+            <select class="form-select" [id]="'empleadoId-' + i" [(ngModel)]="servicio.empleadoId" (ngModelChange)="onEmpleadoChange($event, i)" required>
+              <option [ngValue]="null" disabled selected>Seleccione un especialista</option>
+              <option *ngFor="let empleado of empleadosDisponibles.get(i.toString())" [ngValue]="empleado.id">
+                {{ empleado.nombre }} {{ empleado.apellido }} ({{ simplificarRol(empleado.rol) }})
+              </option>
+            </select>
+            <div *ngIf="!(empleadosDisponibles.get(i.toString())?.length)" class="text-danger mt-2">
+              No hay especialistas disponibles.
+            </div>
+          </div>
+        </div>
       </div>
-      <div *ngIf="showDiscountMessage" class="alert alert-success" role="alert">
-        <strong>¡Descuento aplicado!</strong> Paga con tarjeta de débito con más de 48 horas de antelación y obtén un 15% de descuento.
-      </div>
-      <div *ngIf="servicio" class="alert alert-info" role="alert">
-        <strong>Precio del servicio:</strong> ${{ getServicioDetails(servicio)?.precio | number:'1.2-2' }}
-        <span *ngIf="showDiscountMessage">
-          <br><strong>Precio con 15% de descuento:</strong> ${{ precioFinal | number:'1.2-2' }}
-        </span>
+      <div class="d-flex justify-content-end mb-4">
+        <button type="button" class="btn btn-secondary" (click)="agregarServicio()">Añadir otro servicio</button>
       </div>
       <form (ngSubmit)="hacerReserva()" class="reservation-form">
         <div class="row">
           <div class="col-md-6 mb-4">
-            <label for="servicio" class="form-label">Servicio</label>
-            <select class="form-select" id="servicio" name="servicio" [(ngModel)]="servicio" (ngModelChange)="onServicioChange($event)" required>
-              <option [ngValue]="null" disabled selected>Seleccione un servicio</option>
-              <option *ngFor="let servicio of serviciosList" [ngValue]="servicio.enum">
-                {{ servicio.nombre }}
-              </option>
-            </select>
-          </div>
-          <div class="col-md-6 mb-4">
-            <label for="fechaReserva" class="form-label">Fecha y Hora</label>
-            <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="fechaReserva" name="fechaReserva" required step="3600" [min]="getMinDate()" (ngModelChange)="onFechaReservaChange($event)">
-          </div>
-          <div class="col-md-12 mb-4">
-            <label for="empleadoId" class="form-label">Seleccionar Especialista</label>
-            <select class="form-select" id="empleadoId" name="empleadoId" [(ngModel)]="empleadoId" (ngModelChange)="onEmpleadoChange($event)" required>
-              <option [ngValue]="null" disabled selected>Seleccione un especialista</option>
-              <option *ngFor="let empleado of empleadosDisponibles" [ngValue]="empleado.id">
-                {{ empleado.nombre }} {{ empleado.apellido }} ({{ simplificarRol(empleado.rol) }})
-              </option>
-            </select>
-            <div *ngIf="empleadosDisponibles.length === 0" class="text-danger mt-2">
-              No hay especialistas disponibles.
-            </div>
-          </div>
-          <div class="col-md-6 mb-4">
             <label for="medioPago" class="form-label">Medio de Pago</label>
-            <select class="form-select" id="medioPago" name="medioPago" [(ngModel)]="medioPago" (ngModelChange)="onMedioPagoChange($event)" required>
+            <select class="form-select" id="medioPago" [(ngModel)]="medioPago" name="medioPago" (ngModelChange)="onMedioPagoChange($event)" required>
               <option value="" disabled selected>Seleccione un medio de pago</option>
               <option value="EFECTIVO">Efectivo</option>
               <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
@@ -54,13 +62,11 @@
           </div>
         </div>
         <div class="d-flex justify-content-center gap-3">
-          <button type="submit" class="btn btn-primary" [disabled]="!isFormValid()">
-            Crear Reserva
-          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!isFormValid()">Crear Reserva</button>
         </div>
       </form>
       <div class="d-flex justify-content-center mt-3">
-        <button *ngIf="reservaCreada" type="button" class="btn btn-accent" (click)="generarFactura()">Generar Factura</button>
+        <button *ngIf="reservaCreada" type="button" class="btn btn-accent" (click)="generarFactura()">Generar Facturas</button>
       </div>
     </div>
   </div>
