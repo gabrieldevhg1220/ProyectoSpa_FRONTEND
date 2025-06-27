@@ -12,22 +12,25 @@ export class AuthService {
   private apiUrl = `${environment.apiUrl}/api/auth`;
   private tokenKey = 'auth-token';
   private userIdKey = 'user-id';
+  private emailKey = 'user-email'; // Nueva clave para almacenar el email
   private rolesSubject = new BehaviorSubject<string[]>([]); // Almacena los roles
   roles$ = this.rolesSubject.asObservable(); // Observable para los roles
   private isLoggedInSubject = new BehaviorSubject<boolean>(this.isLoggedIn());
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
-    // Cargar el token y los roles del localStorage al inicializar
+    // Cargar el token, userId, email y los roles del localStorage al inicializar
     this.loadAuthData();
   }
 
   private loadAuthData(): void {
     const token = localStorage.getItem(this.tokenKey);
     const userId = localStorage.getItem(this.userIdKey);
+    const email = localStorage.getItem(this.emailKey);
     if (token) {
       localStorage.setItem(this.tokenKey, token);
       localStorage.setItem(this.userIdKey, userId || '');
+      localStorage.setItem(this.emailKey, email || ''); // Cargar el email si existe
       const roles = this.extractRolesFromToken(token);
       this.rolesSubject.next(roles);
       this.isLoggedInSubject.next(true);
@@ -41,10 +44,16 @@ export class AuthService {
         if (response.jwt) {
           localStorage.setItem(this.tokenKey, response.jwt);
           const userId = response.userId;
+          const userEmail = response.email; // Obtener el email de la respuesta
           if (userId) {
             localStorage.setItem(this.userIdKey, userId);
           } else {
             console.error('No se encontró userId en la respuesta del login');
+          }
+          if (userEmail) {
+            localStorage.setItem(this.emailKey, userEmail); // Almacenar el email
+          } else {
+            console.error('No se encontró email en la respuesta del login');
           }
           // Extraer los roles del token y actualizar el BehaviorSubject
           const roles = this.extractRolesFromToken(response.jwt);
@@ -52,6 +61,7 @@ export class AuthService {
           console.log('Datos almacenados en localStorage:', {
             token: localStorage.getItem(this.tokenKey),
             userId: localStorage.getItem(this.userIdKey),
+            email: localStorage.getItem(this.emailKey),
             roles: roles
           });
           this.isLoggedInSubject.next(true);
@@ -86,6 +96,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userIdKey);
+    localStorage.removeItem(this.emailKey); // Eliminar el email al cerrar sesión
     this.rolesSubject.next([]);
     this.isLoggedInSubject.next(false);
     this.router.navigate(['/login']);
@@ -105,6 +116,12 @@ export class AuthService {
     const userId = localStorage.getItem(this.userIdKey);
     console.log('Recuperando userId desde localStorage:', userId);
     return userId;
+  }
+
+  getEmail(): string | null {
+    const email = localStorage.getItem(this.emailKey);
+    console.log('Recuperando email desde localStorage:', email);
+    return email;
   }
 
   // Extraer los roles del token JWT

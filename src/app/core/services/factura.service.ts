@@ -95,8 +95,12 @@ export class FacturaService {
       return Promise.reject(new Error('El cliente no tiene un correo válido.'));
     }
 
+    // Obtener el email autenticado desde localStorage, usando cliente.email como fallback
+    const authenticatedEmail = localStorage.getItem('email') || cliente.email;
+    console.log('Email enviado:', authenticatedEmail); // Para depuración
+
     const invoiceRequest = {
-      email: cliente.email,
+      email: authenticatedEmail,
       invoiceNumber: invoiceNumber,
       attachmentBase64: pdfBase64
     };
@@ -135,7 +139,7 @@ export class FacturaService {
     }).pipe(
       catchError(error => {
         console.error('Error al enviar el correo:', error);
-        return throwError(() => new Error('Error al enviar el correo: ' + error.message));
+        return throwError(() => new Error('Error al enviar el correo: ' + (error.error?.message || error.message)));
       })
     );
   }
