@@ -15,7 +15,7 @@
               <th>DNI</th>
               <th>Correo</th>
               <th>Fecha</th>
-              <th>Servicio</th>
+              <th>Servicios</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -27,7 +27,11 @@
               <td>{{ reserva.cliente.dni }}</td>
               <td>{{ reserva.cliente.email }}</td>
               <td>{{ reserva.fechaReserva | date:'yyyy-MM-dd HH:mm:ss':'America/Argentina/Buenos_Aires' }}</td>
-              <td>{{ reserva.servicio }}</td>
+              <td>
+                <ul>
+                  <li *ngFor="let servicio of reserva.servicios">{{ servicio.servicio.nombre }}</li>
+                </ul>
+              </td>
               <td>
                 <span class="badge" [ngClass]="{
                   'bg-primary': reserva.status === 'PENDIENTE',
@@ -68,7 +72,10 @@
               <div class="list-group">
                 <div *ngFor="let reserva of clienteHistorial" class="list-group-item">
                   <strong>Fecha:</strong> {{ reserva.fechaReserva | date:'yyyy-MM-dd HH:mm:ss' }} | 
-                  <strong>Servicio:</strong> {{ reserva.servicio }} | 
+                  <strong>Servicios:</strong> 
+                  <ul>
+                    <li *ngFor="let servicio of reserva.servicios">{{ servicio.servicio.nombre }}</li>
+                  </ul> | 
                   <strong>Estado:</strong> {{ reserva.status }} | 
                   <strong>Historial:</strong> {{ reserva.historial || 'Sin notas' }}
                 </div>

@@ -2,10 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ReservaService } from '@core/services/reserva.service';
 import { ClienteService } from '@core/services/cliente.service';
 import { EmpleadoService } from '@core/services/empleado.service';
-import { Reserva } from '@core/models/reserva';
-import { Cliente } from '@core/models/cliente';
-import { Empleado } from '@core/models/empleado';
-import { Servicio } from '@core/models/servicio';
+import { Reserva, ReservaServicio, Servicio, Cliente, Empleado } from '@core/models/reserva';
 import { ToastrService } from 'ngx-toastr';
 import { FacturaService } from '@core/services/factura.service';
 import { AuthService } from '@core/services/auth.service';
@@ -28,9 +25,12 @@ export class RecepcionistaDashboardComponent implements OnInit {
     cliente: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', password: '' },
     empleado: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', rol: '' },
     fechaReserva: '',
-    servicio: '',
     status: 'PENDIENTE',
-    medioPago: 'EFECTIVO'
+    medioPago: 'EFECTIVO',
+    descuentoAplicado: undefined,
+    historial: undefined,
+    servicios: [{ id: 0, fechaServicio: '', servicio: { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' } }],
+    pagos: []
   };
   editingReserva: Reserva | null = null;
   reservaCreada: boolean = false;
@@ -42,23 +42,23 @@ export class RecepcionistaDashboardComponent implements OnInit {
   filterEspecialista: string = '';
   filterDni: string = '';
 
-  private servicioMap: { [key: string]: { nombre: string; precio: number } } = {
-    ANTI_STRESS: { nombre: 'Anti-stress', precio: 5000 },
-    DESCONTRACTURANTE: { nombre: 'Descontracturantes', precio: 5500 },
-    PIEDRAS_CALIENTES: { nombre: 'Masajes con Piedras Calientes', precio: 6000 },
-    CIRCULATORIO: { nombre: 'Circulatorios', precio: 5000 },
-    LIFTING_PESTANAS: { nombre: 'Lifting de Pestañas', precio: 3500 },
-    DEPILACION_FACIAL: { nombre: 'Depilación Facial', precio: 2000 },
-    BELLEZA_MANOS_PIES: { nombre: 'Belleza de Manos y Pies', precio: 3000 },
-    PUNTA_DIAMANTE: { nombre: 'Punta de Diamante', precio: 3500 },
-    LIMPIEZA_PROFUNDA: { nombre: 'Limpieza Profunda + Hidratación', precio: 4800 },
-    CRIO_FRECUENCIA_FACIAL: { nombre: 'Crio Frecuencia Facial', precio: 4800 },
-    VELASLIM: { nombre: 'VelaSlim', precio: 5500 },
-    DERMOHEALTH: { nombre: 'DermoHealth', precio: 5500 },
-    CRIOFRECUENCIA: { nombre: 'Criofrecuencia', precio: 6000 },
-    ULTRACAVITACION: { nombre: 'Ultracavitación', precio: 6800 },
-    HIDROMASAJES: { nombre: 'Hidromasajes', precio: 3000 },
-    YOGA: { nombre: 'Yoga', precio: 2500 }
+  private servicioMap: { [key: string]: { nombre: string; precio: number; descripcion?: string } } = {
+    ANTI_STRESS: { nombre: 'Anti-stress', precio: 5000, descripcion: 'Masaje relajante para reducir el estrés' },
+    DESCONTRACTURANTE: { nombre: 'Descontracturantes', precio: 5500, descripcion: 'Masaje para aliviar contracturas musculares' },
+    PIEDRAS_CALIENTES: { nombre: 'Masajes con Piedras Calientes', precio: 6000, descripcion: 'Masaje terapéutico con piedras calientes' },
+    CIRCULATORIO: { nombre: 'Circulatorios', precio: 5000, descripcion: 'Masaje para mejorar la circulación' },
+    LIFTING_PESTANAS: { nombre: 'Lifting de Pestañas', precio: 3500, descripcion: 'Tratamiento para alargar y curvar pestañas' },
+    DEPILACION_FACIAL: { nombre: 'Depilación Facial', precio: 2000, descripcion: 'Depilación facial con cera o hilo' },
+    BELLEZA_MANOS_PIES: { nombre: 'Belleza de Manos y Pies', precio: 3000, descripcion: 'Manicura y pedicura completa' },
+    PUNTA_DIAMANTE: { nombre: 'Punta de Diamante', precio: 3500, descripcion: 'Exfoliación facial con punta de diamante' },
+    LIMPIEZA_PROFUNDA: { nombre: 'Limpieza Profunda + Hidratación', precio: 4800, descripcion: 'Limpieza facial profunda con hidratación' },
+    CRIO_FRECUENCIA_FACIAL: { nombre: 'Crio Frecuencia Facial', precio: 4800, descripcion: 'Tratamiento facial con crioterapia' },
+    VELASLIM: { nombre: 'VelaSlim', precio: 5500, descripcion: 'Tratamiento reductor con tecnología VelaSlim' },
+    DERMOHEALTH: { nombre: 'DermoHealth', precio: 5500, descripcion: 'Tratamiento dermatológico avanzado' },
+    CRIOFRECUENCIA: { nombre: 'Criofrecuencia', precio: 6000, descripcion: 'Tratamiento de criofrecuencia corporal' },
+    ULTRACAVITACION: { nombre: 'Ultracavitación', precio: 6800, descripcion: 'Tratamiento de reducción de grasa con ultrasonido' },
+    HIDROMASAJES: { nombre: 'Hidromasajes', precio: 3000, descripcion: 'Sesión de hidromasaje relajante' },
+    YOGA: { nombre: 'Yoga', precio: 2500, descripcion: 'Clase de yoga para relajación y flexibilidad' }
   };
 
   constructor(
@@ -82,16 +82,18 @@ export class RecepcionistaDashboardComponent implements OnInit {
       next: (servicios) => {
         this.serviciosList = servicios.map(servicio => ({
           ...servicio,
-          precio: this.servicioMap[servicio.enum]?.precio || 0
+          precio: this.servicioMap[servicio.enum]?.precio || servicio.precio || 0
         }));
       },
       error: (error) => {
         this.toastr.error('Error al cargar los servicios. Usando lista predeterminada.', 'Error');
         console.error('Error al cargar servicios:', error);
-        this.serviciosList = Object.entries(this.servicioMap).map(([enumValue, { nombre, precio }]) => ({
-          enum: enumValue,
+        this.serviciosList = Object.entries(this.servicioMap).map(([enumValue, { nombre, precio, descripcion }], index) => ({
+          id: index + 1, // Asignar un ID único temporal
           nombre,
-          precio
+          descripcion: descripcion || 'Descripción no disponible',
+          precio,
+          enum: enumValue
         }));
       }
     });
@@ -136,8 +138,8 @@ export class RecepcionistaDashboardComponent implements OnInit {
     });
   }
 
-  updateEmpleadosByServicio(servicio: string): void {
-    const safeServicio = servicio || '';
+  updateEmpleadosByServicio(servicioEnum: string): void {
+    const safeServicio = servicioEnum || '';
     this.empleadoService.getEmpleadosForServicio(safeServicio).subscribe({
       next: (empleados) => {
         const isGerenteGeneral = this.authService.isGerenteGeneral();
@@ -184,16 +186,31 @@ export class RecepcionistaDashboardComponent implements OnInit {
   }
 
   createReserva(): void {
-    if (!this.newReserva.cliente.id || !this.newReserva.empleado.id || !this.newReserva.fechaReserva || !this.newReserva.servicio || !this.newReserva.medioPago) {
+    if (!this.newReserva.cliente.id || !this.newReserva.empleado.id || !this.newReserva.fechaReserva || this.newReserva.servicios.some(s => !s.servicio.enum || !s.fechaServicio) || !this.newReserva.medioPago) {
       this.toastr.error('Por favor, completa todos los campos requeridos.', 'Error');
       return;
     }
 
-    const reservaToCreate = {
-      ...this.newReserva,
-      cliente: { id: this.newReserva.cliente.id },
-      empleado: { id: this.newReserva.empleado.id }
+    const cliente = this.clientes.find(c => c.id === this.newReserva.cliente.id) || { id: this.newReserva.cliente.id, dni: '', nombre: '', apellido: '', email: '', telefono: '', password: '' };
+    const empleado = this.empleados.find(e => e.id === this.newReserva.empleado.id) || { id: this.newReserva.empleado.id, dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' };
+
+    const reservaToCreate: Reserva = {
+      id: 0,
+      cliente: cliente,
+      empleado: empleado,
+      fechaReserva: this.newReserva.fechaReserva,
+      status: this.newReserva.status,
+      medioPago: this.newReserva.medioPago,
+      descuentoAplicado: this.newReserva.descuentoAplicado,
+      historial: this.newReserva.historial,
+      servicios: this.newReserva.servicios.map(s => ({
+        id: 0,
+        fechaServicio: s.fechaServicio,
+        servicio: this.serviciosList.find(serv => serv.enum === s.servicio.enum) || { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' }
+      })),
+      pagos: []
     };
+
     this.reservaService.createReserva(reservaToCreate).subscribe({
       next: (newReserva) => {
         this.reservas.push(newReserva);
@@ -208,7 +225,7 @@ export class RecepcionistaDashboardComponent implements OnInit {
         console.error('Error al crear la reserva:', error);
         let errorMessage = error.error?.message || 'Error al crear la reserva. Por favor, intenta de nuevo.';
         if (error.status === 403) {
-          errorMessage = 'No tienes permisos para crear reservas.';
+          errorMessage = 'No tienes permisos para crear reservas. Verifica tu rol o sesión.';
         } else if (error.status === 400) {
           errorMessage = error.error?.message || 'Datos inválidos. Verifica los campos e intenta de nuevo.';
         } else if (error.status === 401) {
@@ -228,15 +245,22 @@ export class RecepcionistaDashboardComponent implements OnInit {
     this.clienteService.getCliente(this.ultimaReserva.cliente.id).subscribe({
       next: (cliente) => {
         this.clienteData = cliente;
-        const servicioDetails = this.serviciosList.find(s => s.enum === this.ultimaReserva!.servicio) || 
-          { nombre: 'Servicio Desconocido', enum: '', precio: 0 };
-        // Usar precio de servicioMap para reservas de recepcionista (sin descuento)
-        servicioDetails.precio = this.servicioMap[this.ultimaReserva!.servicio]?.precio || servicioDetails.precio;
+        const servicios = this.ultimaReserva.servicios.map(s => ({
+          nombre: s.servicio.nombre,
+          precio: s.servicio.precio,
+          fecha: s.fechaServicio
+        }));
+        const valorOriginal = this.ultimaReserva.servicios.reduce((sum, s) => sum + s.servicio.precio, 0);
+        const descuento = this.ultimaReserva.medioPago === 'TARJETA_DEBITO' && this.ultimaReserva.descuentoAplicado ? this.ultimaReserva.descuentoAplicado : 0;
+        const valorConDescuento = this.ultimaReserva.pagos.length > 0 ? this.ultimaReserva.pagos[0].montoTotal : valorOriginal * (1 - (descuento / 100));
         this.facturaService.generateFactura(
           this.ultimaReserva,
           this.clienteData,
-          servicioDetails.nombre,
-          servicioDetails.precio // Usar servicioDetails.precio en lugar de precio
+          servicios,
+          this.ultimaReserva.medioPago,
+          valorOriginal,
+          descuento,
+          valorConDescuento
         ).then((invoiceNumber) => {
           this.toastr.success(`Factura ${invoiceNumber} generada y abierta.`, 'Éxito');
         }).catch((error) => {
@@ -270,15 +294,25 @@ export class RecepcionistaDashboardComponent implements OnInit {
 
   updateReserva(): void {
     if (this.editingReserva) {
-      if (!this.editingReserva.cliente.id || !this.editingReserva.empleado.id || !this.editingReserva.fechaReserva || !this.editingReserva.servicio || !this.editingReserva.medioPago) {
+      if (!this.editingReserva.cliente.id || !this.editingReserva.empleado.id || !this.editingReserva.fechaReserva || this.editingReserva.servicios.some(s => !s.servicio.enum || !s.fechaServicio) || !this.editingReserva.medioPago) {
         this.toastr.error('Por favor, completa todos los campos requeridos.', 'Error');
         return;
       }
-      const reservaToUpdate = {
+      const cliente = this.clientes.find(c => c.id === this.editingReserva!.cliente.id) || { id: this.editingReserva!.cliente.id, dni: '', nombre: '', apellido: '', email: '', telefono: '', password: '' };
+      const empleado = this.empleados.find(e => e.id === this.editingReserva!.empleado.id) || { id: this.editingReserva!.empleado.id, dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' };
+
+      const reservaToUpdate: Reserva = {
         ...this.editingReserva,
-        cliente: { id: this.editingReserva.cliente.id },
-        empleado: { id: this.editingReserva.empleado.id }
+        cliente: cliente,
+        empleado: empleado,
+        servicios: this.editingReserva.servicios.map(s => ({
+          id: 0,
+          fechaServicio: s.fechaServicio,
+          servicio: this.serviciosList.find(serv => serv.enum === s.servicio.enum) || { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' }
+        })),
+        pagos: this.editingReserva.pagos || []
       };
+
       this.reservaService.updateReserva(this.editingReserva.id, reservaToUpdate).subscribe({
         next: (updatedReserva) => {
           const index = this.reservas.findIndex(r => r.id === updatedReserva.id);
@@ -351,9 +385,12 @@ export class RecepcionistaDashboardComponent implements OnInit {
       cliente: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', password: '' },
       empleado: { id: 0, nombre: '', apellido: '', email: '', dni: '', telefono: '', rol: '' },
       fechaReserva: '',
-      servicio: '',
       status: 'PENDIENTE',
-      medioPago: 'EFECTIVO'
+      medioPago: 'EFECTIVO',
+      descuentoAplicado: undefined,
+      historial: undefined,
+      servicios: [{ id: 0, fechaServicio: '', servicio: { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' } }],
+      pagos: []
     };
     this.updateEmpleadosByServicio('');
   }
@@ -368,5 +405,15 @@ export class RecepcionistaDashboardComponent implements OnInit {
     const now = new Date();
     const zonedDate = toZonedTime(now, 'America/Argentina/Buenos_Aires');
     this.newReserva.fechaReserva = format(zonedDate, "yyyy-MM-dd'T'HH:mm");
+  }
+
+  addServicio(): void {
+    this.newReserva.servicios.push({ id: 0, fechaServicio: '', servicio: { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' } });
+  }
+
+  removeServicio(index: number): void {
+    if (this.newReserva.servicios.length > 1) {
+      this.newReserva.servicios.splice(index, 1);
+    }
   }
 }

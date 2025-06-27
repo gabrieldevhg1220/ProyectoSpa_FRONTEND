@@ -15,7 +15,7 @@ import { Empleado } from '@core/models/empleado';
 export class AdminEmpleadosComponent implements OnInit {
   empleados: Empleado[] = [];
   filteredEmpleados: Empleado[] = []; // Lista filtrada de empleados
-  newEmpleado: Empleado = { dni: '', nombre: '', apellido: '', email: '', password: '', telefono: '', rol: 'TERAPEUTA' };
+  newEmpleado: Empleado = { id: 0, dni: '', nombre: '', apellido: '', email: '', password: '', telefono: '', rol: 'TERAPEUTA' };
   editingEmpleado: Empleado | null = null;
   roles: string[] = [];
   filterRole: string = ''; // Filtro por rol
@@ -104,7 +104,7 @@ export class AdminEmpleadosComponent implements OnInit {
       next: () => {
         this.toastr.success('Empleado creado exitosamente.', 'Éxito');
         this.loadEmpleados();
-        this.newEmpleado = { dni: '', nombre: '', apellido: '', email: '', password: '', telefono: '', rol: 'TERAPEUTA' };
+        this.newEmpleado = { id: 0, dni: '', nombre: '', apellido: '', email: '', password: '', telefono: '', rol: 'TERAPEUTA' };
       },
       error: (error) => {
         this.toastr.error(error.message || 'Error al crear el empleado.', 'Error');

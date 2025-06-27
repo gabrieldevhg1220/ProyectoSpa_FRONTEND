@@ -6,6 +6,7 @@ import { EmpleadoService } from '@core/services/empleado.service';
 import { FacturaService } from '@core/services/factura.service';
 import { ClienteService } from '@core/services/cliente.service';
 import { ToastrService } from 'ngx-toastr';
+import { Reserva, Cliente, Empleado, ReservaServicio, Servicio } from '@core/models/reserva';
 
 @Component({
   selector: 'app-reserva',
@@ -16,11 +17,11 @@ import { ToastrService } from 'ngx-toastr';
 export class ReservaComponent implements OnInit {
   serviciosSeleccionados: { servicio: string | null, fechaServicio: string, empleadoId: number | null }[] = [{ servicio: null, fechaServicio: '', empleadoId: null }];
   clienteId: number | null = null;
-  empleadosDisponibles: Map<string, any[]> = new Map();
+  empleadosDisponibles: Map<string, Empleado[]> = new Map();
   reservaCreada: boolean = false;
-  ultimaReserva: any = null;
+  ultimaReserva: Reserva | null = null;
   serviciosDetails: Map<string, { nombre: string, precio: number }> = new Map();
-  clienteData: any = null;
+  clienteData: Cliente | null = null;
   formularioDeshabilitado: boolean = false;
   show48HoursWarning: boolean[] = [];
   medioPago: string = '';
@@ -263,33 +264,58 @@ export class ReservaComponent implements OnInit {
       return;
     }
 
-    const reserva = {
-      clienteId: this.clienteId,
-      empleadoId: this.serviciosSeleccionados[0].empleadoId, // Usar el primer empleado como referencia
-      fechaReserva: this.serviciosSeleccionados[0].fechaServicio, // Usar la primera fecha como referencia
-      servicios: this.serviciosSeleccionados.map(s => ({
-        servicio: s.servicio,
-        fechaServicio: s.fechaServicio
-      })),
+    const cliente = this.clienteId ? { id: this.clienteId, dni: '', nombre: '', apellido: '', email: '', telefono: '', password: '' } : null;
+    if (!cliente) {
+      this.toastr.error('No se pudo identificar el cliente.', 'Error');
+      return;
+    }
+
+    const empleadoIds = this.serviciosSeleccionados.map(s => s.empleadoId);
+    const empleado = this.empleadosDisponibles.get('0')?.find(e => e.id === empleadoIds[0]) || { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' };
+
+    // Calcular el descuento total basado en descuentosAplicados
+    const totalDiscount = Array.from(this.descuentosAplicados.values()).reduce((sum, discount) => sum + discount, 0) / this.serviciosSeleccionados.length || 0;
+
+    const reserva: Reserva = {
+      id: 0,
+      cliente: cliente,
+      empleado: empleado,
+      fechaReserva: this.serviciosSeleccionados[0].fechaServicio,
       status: 'PENDIENTE',
       medioPago: this.medioPago,
-      descuentoAplicado: Math.max(...Array.from(this.descuentosAplicados.values())) // Usar el descuento máximo
+      descuentoAplicado: totalDiscount > 0 ? totalDiscount : undefined, // Asignar descuento solo si aplica
+      servicios: this.serviciosSeleccionados.map(s => ({
+        id: 0,
+        fechaServicio: s.fechaServicio,
+        servicio: this.getServicioDetails(s.servicio || '') ? {
+          id: 0,
+          nombre: this.getServicioDetails(s.servicio || '')!.nombre,
+          descripcion: '',
+          precio: this.getServicioDetails(s.servicio || '')!.precio,
+          enum: s.servicio || ''
+        } : { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' }
+      })),
+      pagos: []
     };
 
     this.reservaService.createReserva(reserva).subscribe({
       next: (response) => {
         this.toastr.success('Reserva creada exitosamente.', 'Éxito');
-        this.ultimaReserva = response;
+        // Asegurar que servicios y descuentoAplicado se inicialicen con los datos enviados o recibidos
+        this.ultimaReserva = { ...response, servicios: response.servicios || reserva.servicios, descuentoAplicado: response.descuentoAplicado || reserva.descuentoAplicado };
         this.formularioDeshabilitado = true;
         this.reservaCreada = true;
 
         this.clienteService.getClienteByToken().subscribe({
           next: (clienteData) => {
             this.clienteData = {
+              id: clienteData.id || 0,
               nombre: clienteData.nombre || 'N/A',
               apellido: clienteData.apellido || '',
               dni: clienteData.dni || 'N/A',
-              email: clienteData.email || 'N/A'
+              email: clienteData.email || 'N/A',
+              telefono: clienteData.telefono || '',
+              password: ''
             };
           },
           error: (error) => {
@@ -311,27 +337,28 @@ export class ReservaComponent implements OnInit {
       return;
     }
 
-    // Agrupar servicios por fecha
-    const serviciosPorDia = this.serviciosSeleccionados.reduce((acc, s, index) => {
-      const fecha = new Date(s.fechaServicio).toISOString().split('T')[0];
-      if (!acc[fecha]) acc[fecha] = [];
-      acc[fecha].push({ servicio: s.servicio!, precio: this.preciosFinales.get(index.toString())!, nombre: this.serviciosDetails.get(index.toString())!.nombre });
-      return acc;
-    }, {} as { [key: string]: { servicio: string, precio: number, nombre: string }[] });
-
-    // Generar una factura por día
-    Object.entries(serviciosPorDia).forEach(([fecha, servicios]) => {
-      const total = servicios.reduce((sum, s) => sum + s.precio, 0);
-      this.facturaService.generateFactura(
-        { fechaReserva: fecha, servicios },
-        this.clienteData,
-        servicios.map(s => s.nombre).join(', '),
-        total
-      ).then((invoiceNumber) => {
-        this.toastr.success(`Factura ${invoiceNumber} generada y abierta para el ${fecha}.`, 'Éxito');
-      }).catch((error) => {
-        this.toastr.error(error.message || `Error al generar la factura para el ${fecha}.`, 'Error');
-      });
+    // Verificar si servicios está definido antes de mapear
+    const servicios = this.ultimaReserva.servicios ? this.ultimaReserva.servicios.map(s => ({
+      nombre: s.servicio.nombre,
+      precio: s.servicio.precio,
+      fecha: s.fechaServicio
+    })) : [];
+    const valorOriginal = this.ultimaReserva.servicios ? this.ultimaReserva.servicios.reduce((sum, s) => sum + s.servicio.precio, 0) : 0;
+    const descuento = this.ultimaReserva.medioPago === 'TARJETA_DEBITO' && this.ultimaReserva.descuentoAplicado !== undefined && this.ultimaReserva.descuentoAplicado !== null ? this.ultimaReserva.descuentoAplicado : 0;
+    const valorConDescuento = this.ultimaReserva.pagos.length > 0 ? this.ultimaReserva.pagos[0].montoTotal : valorOriginal * (1 - (descuento / 100));
+    this.facturaService.generateFactura(
+      this.ultimaReserva,
+      this.clienteData,
+      servicios,
+      this.ultimaReserva.medioPago,
+      valorOriginal,
+      descuento,
+      valorConDescuento
+    ).then((invoiceNumber) => {
+      this.toastr.success(`Factura ${invoiceNumber} generada y abierta.`, 'Éxito');
+    }).catch((error) => {
+      console.error('Error al generar la factura:', error);
+      this.toastr.error(error.message || 'Error al generar la factura. Revisa la consola para más detalles.', 'Error');
     });
   }
 

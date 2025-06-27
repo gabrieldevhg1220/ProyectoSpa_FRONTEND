@@ -7,14 +7,14 @@
     <form>
       <div class="mb-3">
         <label for="servicio" class="form-label text-dark">Servicio</label>
-        <select class="form-control" id="servicio" [(ngModel)]="nuevaReserva.servicio" name="servicio" required>
+        <select class="form-control" id="servicio" [(ngModel)]="nuevaReserva.servicios[0].servicio.id" name="servicio" required>
           <option value="" disabled>Selecciona un servicio</option>
-          <option *ngFor="let servicio of servicios" [value]="servicio">{{ servicio }}</option>
+          <option *ngFor="let servicio of servicios" [value]="servicio.id">{{ servicio.nombre }}</option>
         </select>
       </div>
       <div class="mb-3">
         <label for="fechaReserva" class="form-label text-dark">Fecha y Hora</label>
-        <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="nuevaReserva.fechaReserva" name="fechaReserva" required>
+        <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="nuevaReserva.servicios[0].fechaServicio" name="fechaReserva" required>
       </div>
       <div class="mb-3">
         <label for="empleado" class="form-label text-dark">Seleccionar Empleado</label>
@@ -47,15 +47,19 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th class="text-dark">Servicio</th>
+            <th class="text-dark">Servicios</th>
             <th class="text-dark">Fecha y Hora</th>
             <th class="text-dark">Estado</th>
             <th class="text-dark">Medio de Pago</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let reserva of reservas">
-            <td class="text-dark">{{ reserva.servicio }}</td>
+          <tr *ngFor="let reserva of filteredReservas">
+            <td class="text-dark">
+              <ul>
+                <li *ngFor="let servicio of reserva.servicios">{{ servicio.servicio.nombre }} ({{ servicio.fechaServicio | date:'medium' }})</li>
+              </ul>
+            </td>
             <td class="text-dark">{{ reserva.fechaReserva | date:'medium' }}</td>
             <td class="text-dark">{{ reserva.status || 'PENDIENTE' }}</td>
             <td class="text-dark">{{ reserva.medioPago || 'No especificado' }}</td>

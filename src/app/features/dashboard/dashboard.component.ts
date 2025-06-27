@@ -1,214 +1,151 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from '@core/services/auth.service';
 import { ReservaService } from '@core/services/reserva.service';
-import { EmpleadoService } from '@core/services/empleado.service';
-import { Reserva } from '@core/models/reserva';
-import { Cliente } from '@core/models/cliente';
-import { Empleado } from '@core/models/empleado';
+import { Reserva, ReservaServicio, Servicio, Cliente, Empleado } from '@core/models/reserva';
 import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: false,
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss'],
+  styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-  userRole: string | null = null;
-  userType: string | null = null;
   reservas: Reserva[] = [];
-  servicios: string[] = [];
-  empleados: any[] = [];
+  servicios: Servicio[] = [];
+  filteredReservas: Reserva[] = [];
+  filterText: string = '';
   nuevaReserva: Reserva = {
     id: 0,
-    cliente: {} as Cliente,
-    empleado: {} as Empleado,
+    cliente: { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', password: '' },
+    empleado: { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' },
     fechaReserva: '',
-    servicio: '',
     status: 'PENDIENTE',
-    medioPago: 'EFECTIVO' // Añadir medioPago
+    medioPago: 'EFECTIVO',
+    servicios: [{ id: 0, fechaServicio: '', servicio: { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' } }],
+    pagos: []
   };
-
   selectedEmpleadoId: number | null = null;
+  empleados: Empleado[] = [];
 
-  constructor(
-    private authService: AuthService,
-    private reservaService: ReservaService,
-    private empleadoService: EmpleadoService,
-    private toastr: ToastrService,
-    private router: Router
-  ) {}
+  constructor(private reservaService: ReservaService, private toastr: ToastrService) {}
 
   ngOnInit(): void {
-    this.userRole = this.authService.getPrimaryRole();
     this.loadReservas();
     this.loadServicios();
     this.loadEmpleados();
-
-    // Redirigir a /reserva solo si el usuario NO es GERENTE_GENERAL ni RECEPCIONISTA
-    if (!this.authService.isGerenteGeneral() && !this.authService.isRecepcionista()) {
-      this.router.navigate(['/reserva']);
-    }
-    return; // Salir de ngOnInit para evitar cargar datos innecesarios
-
-    // Cargar lista de empleados solo si el usuario tiene el rol adecuado
-    if (this.authService.isGerenteGeneral() || this.authService.isRecepcionista()) {
-      this.empleadoService.getAllEmpleados().subscribe({
-        next: (empleados) => {
-          this.empleados = empleados;
-          if (empleados.length > 0) {
-            this.toastr.success('Lista de empleados cargada correctamente.', 'Éxito');
-          } else {
-            this.toastr.info('No hay empleados disponibles.', 'Información');
-          }
-        },
-        error: (error) => {
-          console.error('Error al cargar los empleados:', error);
-          this.toastr.error(error.message || 'Error al cargar los empleados.', 'Error');
-        }
-      });
-    }
   }
 
   loadReservas(): void {
     this.reservaService.getReservas().subscribe({
-      next: (reservas) => {
-        this.reservas = reservas;
-        if (reservas.length > 0) {
-          this.toastr.success('Reservas cargadas correctamente', 'Éxito');
-        } else {
-          this.toastr.info('No tienes reservas actualmente', 'Información');
-        }
+      next: (data) => {
+        this.reservas = data.map(r => ({
+          ...r,
+          cliente: r.cliente || { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', password: '' },
+          empleado: r.empleado || { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' },
+          servicios: r.servicios || [{ id: 0, fechaServicio: '', servicio: { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' } }],
+          pagos: r.pagos || []
+        }));
+        this.filteredReservas = [...this.reservas];
+        this.applyFilter();
       },
       error: (error) => {
-        console.error('Error al cargar las reservas:', error);
-        this.toastr.error('Error al cargar tus reservas. Por favor, intenta de nuevo.', 'Error');
+        this.toastr.error('Error al cargar las reservas.', 'Error');
+        console.error('Error al cargar reservas:', error);
       }
     });
   }
 
   loadServicios(): void {
-    this.reservaService.getServiciosEnums().subscribe({
+    this.reservaService.getServicios().subscribe({
       next: (servicios) => {
-        this.servicios = servicios;
+        this.servicios = servicios.map(s => ({
+          id: s.id || 0,
+          nombre: s.nombre || '',
+          descripcion: s.descripcion || '',
+          precio: s.precio || 0,
+          enum: s.enum || '' // Asegurar que enum siempre esté presente
+        }));
       },
       error: (error) => {
-        console.error('Error al cargar los servicios:', error);
-        this.toastr.error('Error al cargar los servicios: ' + (error.message || 'Por favor, intenta de nuevo.'));
+        this.toastr.error('Error al cargar los servicios.', 'Error');
+        console.error('Error al cargar servicios:', error);
       }
     });
   }
 
   loadEmpleados(): void {
-    this.empleadoService.getAllEmpleados().subscribe({
-      next: (empleados) => {
-        this.empleados = empleados;
-        console.log('Empleados cargados:', empleados); // Agregar log para depurar
-      },
-      error: (error) => {
-        console.error('Error al cargar los empleados:', error);
-        this.toastr.error('Error al cargar la lista de empleados: ' + (error.statusText || 
-        error.message || 'Por favor, intenta de nuevo.'));
-      }
-    });
+    // Simulación de carga de empleados (ajusta según tu servicio real)
+    // Aquí deberías integrar con EmpleadoService si existe
+    this.empleados = [
+      { id: 1, dni: '12345678', nombre: 'Juan', apellido: 'Pérez', email: 'juan@example.com', telefono: '123456789', rol: 'MASAJISTA_TERAPEUTICO' },
+      { id: 2, dni: '87654321', nombre: 'María', apellido: 'Gómez', email: 'maria@example.com', telefono: '987654321', rol: 'ESTETICISTA' }
+    ];
+  }
+
+  applyFilter(): void {
+    this.filteredReservas = this.reservas.filter(reserva =>
+      `${reserva.cliente.nombre} ${reserva.cliente.apellido} ${reserva.empleado.nombre} ${reserva.empleado.apellido}`
+        .toLowerCase()
+        .includes(this.filterText.toLowerCase())
+    );
+  }
+
+  clearFilter(): void {
+    this.filterText = '';
+    this.applyFilter();
   }
 
   createReserva(): void {
-    const clienteId = this.authService.getUserId();
-    console.log('Cliente ID al intentar crear reserva:', clienteId);
-    console.log('Rol del usuario:', this.authService.getPrimaryRole());
-    console.log('Token:', this.authService.getToken());
-
-    if (!clienteId) {
-      this.toastr.error('Debes iniciar sesión para crear una reserva.', 'Error');
-      return;
-    }
-
-    if (!this.nuevaReserva.servicio || !this.nuevaReserva.fechaReserva || !this.selectedEmpleadoId || !this.nuevaReserva.medioPago) {
+    if (!this.nuevaReserva.servicios[0].servicio.id || !this.nuevaReserva.servicios[0].fechaServicio || !this.selectedEmpleadoId || !this.nuevaReserva.medioPago) {
       this.toastr.error('Por favor, completa todos los campos requeridos.', 'Error');
       return;
     }
 
-    const reservaData = {
-      cliente: { id: clienteId },
-      empleado: { id: this.selectedEmpleadoId },
-      fechaReserva: this.nuevaReserva.fechaReserva,
-      servicio: this.nuevaReserva.servicio,
-      status: 'PENDIENTE',
-      medioPago: this.nuevaReserva.medioPago // Añadir medioPago
+    const empleado = this.empleados.find(e => e.id === this.selectedEmpleadoId) || { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' };
+    const reserva: Reserva = {
+      ...this.nuevaReserva,
+      empleado: empleado,
+      fechaReserva: this.nuevaReserva.servicios[0].fechaServicio
     };
-    
-    console.log('Enviando datos de reserva:', reservaData);
 
-    this.reservaService.createReserva(reservaData).subscribe({
-      next: (response: any) => {
-        this.toastr.success(response.message || 'Reserva creada exitosamente', 'Éxito');
-
-        const empleadoSeleccionado = this.empleados.find(emp => emp.id === this.selectedEmpleadoId);
-
-        const clienteSimulado: Cliente = {
-          id: parseInt(clienteId, 10),
-          dni: '',
-          nombre: '',
-          apellido: '',
-          email: '',
-          telefono: ''
-        };
-
-        const nuevaReservaCompleta: Reserva = {
-          id: response.data?.id || Date.now(),
-          cliente: clienteSimulado,
-          empleado: empleadoSeleccionado || {
-            id: this.selectedEmpleadoId,
-            dni: '',
-            nombre: 'Desconocido',
-            apellido: '',
-            email: '',
-            telefono: '',
-            rol: ''
-          },
-          fechaReserva: this.nuevaReserva.fechaReserva,
-          servicio: this.nuevaReserva.servicio,
-          status: 'PENDIENTE',
-          medioPago: this.nuevaReserva.medioPago // Añadir medioPago
-        };
-        this.reservas.push(nuevaReservaCompleta);
-
-        this.nuevaReserva = {
-          id: 0,
-          cliente: { dni: '', nombre: '', apellido: '', email: '', telefono: '' } as Cliente,
-          empleado: { dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' } as Empleado,
-          fechaReserva: '',
-          servicio: '',
-          status: 'PENDIENTE',
-          medioPago: 'EFECTIVO' // Añadir medioPago
-        };
-        this.selectedEmpleadoId = null;
+    this.reservaService.createReserva(reserva).subscribe({
+      next: (newReserva) => {
+        this.reservas.push(newReserva);
+        this.filteredReservas = [...this.reservas];
+        this.toastr.success('Reserva creada exitosamente.', 'Éxito');
+        this.resetForm();
       },
       error: (error) => {
-        console.error('Error al crear la reserva:', error);
-        this.toastr.error(error.error?.message || 'Error al crear la reserva. Por favor, intenta de nuevo.', 'Error');
+        this.toastr.error('Error al crear la reserva.', 'Error');
+        console.error('Error al crear reserva:', error);
       }
     });
   }
 
-  // Método para convertir roles a formato legible
-  getReadableRole(rol: string): string {
-    // Eliminar el prefijo ROLE_ si existe
-    const cleanedRole = rol.startsWith('ROLE_') ? rol.replace('ROLE_', '') : rol;
-    const roleMap: { [key: string]: string } = {
-      'ESTETICISTA': 'Esteticista',
-      'TECNICO_ESTETICA_AVANZADA': 'Técnico en Estética Avanzada',
-      'ESPECIALISTA_CUIDADO_UNAS': 'Especialista en Cuidado de Uñas',
-      'MASAJISTA_TERAPEUTICO': 'Masajista Terapéutico',
-      'TERAPEUTA_SPA': 'Terapeuta Spa',
-      'COORDINADOR_AREA': 'Coordinador de Área',
-      'RECEPCIONISTA': 'Recepcionista',
-      'GERENTE_GENERAL': 'Gerente General',
-      'INSTRUCTOR_YOGA': 'Instructor Yoga',
-      'NUTRICIONISTA': 'Nutricionista'
+  resetForm(): void {
+    this.nuevaReserva = {
+      id: 0,
+      cliente: { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', password: '' },
+      empleado: { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '', rol: '' },
+      fechaReserva: '',
+      status: 'PENDIENTE',
+      medioPago: 'EFECTIVO',
+      servicios: [{ id: 0, fechaServicio: '', servicio: { id: 0, nombre: '', descripcion: '', precio: 0, enum: '' } }],
+      pagos: []
     };
-    return roleMap[cleanedRole] || cleanedRole;
+    this.selectedEmpleadoId = null;
+  }
+
+  getReadableRole(rol: string): string {
+    switch (rol) {
+      case 'ESTETICISTA': return 'Esteticista';
+      case 'TECNICO_ESTETICA_AVANZADA': return 'Estética Avanzada';
+      case 'ESPECIALISTA_CUIDADO_UNAS': return 'Cuidado de Uñas';
+      case 'MASAJISTA_TERAPEUTICO': return 'Masajista Terapéutico';
+      case 'TERAPEUTA_SPA': return 'Terapeuta en Spa';
+      case 'INSTRUCTOR_YOGA': return 'Instructor/a de Yoga';
+      case 'NUTRICIONISTA': return 'Nutricionista';
+      default: return rol;
+    }
   }
 }

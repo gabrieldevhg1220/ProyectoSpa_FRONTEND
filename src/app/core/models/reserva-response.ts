@@ -1,3 +1,6 @@
+import { Reserva } from './reserva';
+
 export interface ReservaResponse {
-    message: string;
+  message: string;
+  data?: Reserva | { id: number };
 }

@@ -153,4 +153,9 @@ export class AuthService {
     ];
     return roles.some(role => profesionalRoles.includes(role));
   }
+
+  // Nuevo método para obtener los roles del usuario
+  getRoles(): string[] {
+    return this.rolesSubject.getValue();
+  }
 }

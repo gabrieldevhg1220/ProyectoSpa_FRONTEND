@@ -14,25 +14,40 @@
         <div class="row">
           <div class="col-md-4 mb-4">
             <label for="cliente" class="form-label">Cliente</label>
-            <select class="form-select" id="cliente" [(ngModel)]="newReserva.cliente" name="cliente" required>
-              <option *ngFor="let cliente of clientes" [ngValue]="cliente">{{ cliente.nombre }} {{ cliente.apellido }}</option>
+            <select class="form-select" id="cliente" [(ngModel)]="newReserva.cliente.id" name="cliente" required>
+              <option *ngFor="let cliente of clientes" [ngValue]="cliente.id">{{ cliente.nombre }} {{ cliente.apellido }}</option>
             </select>
           </div>
           <div class="col-md-4 mb-4">
             <label for="empleado" class="form-label">Especialista</label>
-            <select class="form-select" id="empleado" [(ngModel)]="newReserva.empleado" name="empleado" required>
-              <option *ngFor="let empleado of empleados" [ngValue]="empleado">{{ empleado.nombre }} {{ empleado.apellido }} ({{ empleado.rol }})</option>
+            <select class="form-select" id="empleado" [(ngModel)]="newReserva.empleado.id" name="empleado" required>
+              <option *ngFor="let empleado of empleados" [ngValue]="empleado.id">{{ empleado.nombre }} {{ empleado.apellido }} ({{ empleado.rol }})</option>
             </select>
           </div>
           <div class="col-md-4 mb-4">
             <label for="fechaReserva" class="form-label">Fecha y Hora</label>
             <input type="datetime-local" class="form-control" id="fechaReserva" [(ngModel)]="newReserva.fechaReserva" name="fechaReserva" required step="3600" [min]="getMinDate()">
           </div>
-          <div class="col-md-4 mb-4">
-            <label for="servicio" class="form-label">Servicio</label>
-            <select class="form-select" id="servicio" [(ngModel)]="newReserva.servicio" name="servicio" required (ngModelChange)="updateEmpleadosByServicio(newReserva.servicio)">
-              <option *ngFor="let servicio of serviciosList" [value]="servicio.enum">{{ servicio.nombre }}</option>
-            </select>
+          <!-- Lista de Servicios -->
+          <div class="col-12 mb-4" *ngFor="let servicio of newReserva.servicios; let i = index" [ngClass]="{'mb-2': i !== newReserva.servicios.length - 1}">
+            <div class="row align-items-end">
+              <div class="col-md-5">
+                <label [for]="'servicio' + i" class="form-label">Servicio {{ i + 1 }}</label>
+                <select class="form-select" [id]="'servicio' + i" [(ngModel)]="newReserva.servicios[i].servicio.enum" [name]="'servicio' + i" required (ngModelChange)="updateEmpleadosByServicio($event)">
+                  <option *ngFor="let serv of serviciosList" [value]="serv.enum">{{ serv.nombre }}</option>
+                </select>
+              </div>
+              <div class="col-md-5">
+                <label [for]="'fechaServicio' + i" class="form-label">Fecha del Servicio</label>
+                <input type="datetime-local" class="form-control" [id]="'fechaServicio' + i" [(ngModel)]="newReserva.servicios[i].fechaServicio" [name]="'fechaServicio' + i" required step="3600" [min]="getMinDate()">
+              </div>
+              <div class="col-md-2">
+                <button type="button" class="btn btn-danger mt-4" (click)="removeServicio(i)" *ngIf="newReserva.servicios.length > 1">Eliminar</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 text-center mb-4">
+            <button type="button" class="btn btn-secondary" (click)="addServicio()">Agregar Otro Servicio</button>
           </div>
           <div class="col-md-4 mb-4">
             <label for="status" class="form-label">Estado</label>
@@ -99,7 +114,7 @@
               <th>Correo</th>
               <th>Especialista</th>
               <th>Fecha</th>
-              <th>Servicio</th>
+              <th>Servicios</th>
               <th style="width: 120px; min-width: 120px;">Estado</th>
               <th style="width: 120px; min-width: 120px;">Medio de Pago</th>
               <th class="actions-column" style="width: 180px; min-width: 180px;">Acciones</th>
@@ -113,7 +128,11 @@
               <td>{{ reserva.cliente.email }}</td>
               <td>{{ reserva.empleado.nombre }} {{ reserva.empleado.apellido }} ({{ reserva.empleado.rol }})</td>
               <td>{{ reserva.fechaReserva | date:'yyyy-MM-dd HH:mm:ss' }}</td>
-              <td>{{ reserva.servicio }}</td>
+              <td>
+                <ul>
+                  <li *ngFor="let servicio of reserva.servicios">{{ servicio.servicio.nombre }}</li>
+                </ul>
+              </td>
               <td>
                 <span class="badge" [ngClass]="{
                   'bg-primary': reserva.status === 'PENDIENTE',
@@ -151,25 +170,40 @@
           <form (ngSubmit)="updateReserva()">
             <div class="mb-4">
               <label for="editCliente" class="form-label">Cliente</label>
-              <select class="form-select" id="editCliente" [(ngModel)]="editingReserva.cliente" name="editCliente" required>
-                <option *ngFor="let cliente of clientes" [ngValue]="cliente">{{ cliente.nombre }} {{ cliente.apellido }}</option>
+              <select class="form-select" id="editCliente" [(ngModel)]="editingReserva.cliente.id" name="editCliente" required>
+                <option *ngFor="let cliente of clientes" [ngValue]="cliente.id">{{ cliente.nombre }} {{ cliente.apellido }}</option>
               </select>
             </div>
             <div class="mb-4">
               <label for="editEmpleado" class="form-label">Especialista</label>
-              <select class="form-select" id="editEmpleado" [(ngModel)]="editingReserva.empleado" name="editEmpleado" required>
-                <option *ngFor="let empleado of empleados" [ngValue]="empleado">{{ empleado.nombre }} {{ empleado.apellido }} ({{ empleado.rol }})</option>
+              <select class="form-select" id="editEmpleado" [(ngModel)]="editingReserva.empleado.id" name="editEmpleado" required>
+                <option *ngFor="let empleado of empleados" [ngValue]="empleado.id">{{ empleado.nombre }} {{ empleado.apellido }} ({{ empleado.rol }})</option>
               </select>
             </div>
             <div class="mb-4">
               <label for="editFechaReserva" class="form-label">Fecha y Hora</label>
               <input type="datetime-local" class="form-control" id="editFechaReserva" [(ngModel)]="editingReserva.fechaReserva" name="editFechaReserva" required [min]="getMinDate()">
             </div>
-            <div class="mb-4">
-              <label for="editServicio" class="form-label">Servicio</label>
-              <select class="form-select" id="editServicio" [(ngModel)]="editingReserva.servicio" name="editServicio" required (ngModelChange)="updateEmpleadosByServicio(editingReserva.servicio)">
-                <option *ngFor="let servicio of serviciosList" [value]="servicio.enum">{{ servicio.nombre }}</option>
-              </select>
+            <!-- Lista de Servicios en el Modal -->
+            <div class="col-12 mb-4" *ngFor="let servicio of editingReserva.servicios; let i = index" [ngClass]="{'mb-2': i !== editingReserva.servicios.length - 1}">
+              <div class="row align-items-end">
+                <div class="col-md-5">
+                  <label [for]="'editServicio' + i" class="form-label">Servicio {{ i + 1 }}</label>
+                  <select class="form-select" [id]="'editServicio' + i" [(ngModel)]="editingReserva.servicios[i].servicio.enum" [name]="'editServicio' + i" required (ngModelChange)="updateEmpleadosByServicio($event)">
+                    <option *ngFor="let serv of serviciosList" [value]="serv.enum">{{ serv.nombre }}</option>
+                  </select>
+                </div>
+                <div class="col-md-5">
+                  <label [for]="'editFechaServicio' + i" class="form-label">Fecha del Servicio</label>
+                  <input type="datetime-local" class="form-control" [id]="'editFechaServicio' + i" [(ngModel)]="editingReserva.servicios[i].fechaServicio" [name]="'editFechaServicio' + i" required step="3600" [min]="getMinDate()">
+                </div>
+                <div class="col-md-2">
+                  <button type="button" class="btn btn-danger mt-4" (click)="removeServicio(i)" *ngIf="editingReserva.servicios.length > 1">Eliminar</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 text-center mb-4">
+              <button type="button" class="btn btn-secondary" (click)="addServicio()">Agregar Otro Servicio</button>
             </div>
             <div class="mb-4">
               <label for="editStatus" class="form-label">Estado</label>

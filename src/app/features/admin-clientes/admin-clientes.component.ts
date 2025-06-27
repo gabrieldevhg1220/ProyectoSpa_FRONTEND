@@ -15,7 +15,7 @@ import { Cliente } from '@core/models/cliente';
 export class AdminClientesComponent implements OnInit {
   clientes: Cliente[] = [];
   filteredClientes: Cliente[] = [];
-  selectedCliente: Cliente = { dni: '', nombre: '', apellido: '', email: '', telefono: '' };
+  selectedCliente: Cliente = { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '' };
   isEditing = false;
   filterDni: string = '';
 
@@ -131,7 +131,7 @@ export class AdminClientesComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.selectedCliente = { dni: '', nombre: '', apellido: '', email: '', telefono: '' };
+    this.selectedCliente = { id: 0, dni: '', nombre: '', apellido: '', email: '', telefono: '' };
     this.isEditing = false;
   }
 }

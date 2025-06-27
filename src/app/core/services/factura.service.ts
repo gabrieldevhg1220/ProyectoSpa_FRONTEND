@@ -30,7 +30,7 @@ export class FacturaService {
 
   constructor(private http: HttpClient) {}
 
-  async generateFactura(reserva: any, cliente: any, serviciosNombre: string, precioTotal: number) {
+  async generateFactura(reserva: any, cliente: any, servicios: any[], medioPago: string, valorOriginal: number, descuento: number | null, valorConDescuento: number) {
     const doc = new jsPDF();
 
     const fontRegular = await loadFont(doc, 'Roboto-Regular.ttf', 'assets/fonts/Roboto-Regular.ttf');
@@ -67,9 +67,21 @@ export class FacturaService {
     let y = 100;
     doc.text(`Fecha: ${new Date(reserva.fechaReserva).toLocaleDateString('es-AR')}`, 20, y);
     y += 10;
-    doc.text(`Servicios: ${serviciosNombre}`, 20, y);
+    doc.text('Servicios:', 20, y);
+    y += 5;
+    servicios.forEach((servicio: any, index: number) => {
+      doc.text(`- ${servicio.nombre} (Precio: $${servicio.precio.toFixed(2)}, Fecha: ${new Date(servicio.fecha).toLocaleDateString('es-AR')})`, 20, y + (index * 10));
+    });
+    y += servicios.length * 10 + 5;
+    doc.text(`Medio de pago: ${medioPago}`, 20, y);
     y += 10;
-    doc.text(`Total: $${precioTotal || 0}`, 20, y);
+    doc.text(`Valor original: $${valorOriginal.toFixed(2)}`, 20, y);
+    y += 10;
+    if (descuento && descuento > 0) {
+      doc.text(`Descuento (15%): $${(valorOriginal * (descuento / 100)).toFixed(2)}`, 20, y);
+      y += 10;
+    }
+    doc.text(`Total con descuento: $${valorConDescuento.toFixed(2)}`, 20, y);
 
     doc.setFontSize(12);
     doc.text('Gracias por elegir Sentirse Bien!', 105, y + 30, { align: 'center' });
@@ -78,6 +90,8 @@ export class FacturaService {
     const pdfBase64 = await this.blobToBase64(pdfBlob);
 
     if (!cliente.email || cliente.email === 'N/A') {
+      console.error('Cliente sin correo válido:', cliente);
+      window.open(URL.createObjectURL(pdfBlob), '_blank');
       return Promise.reject(new Error('El cliente no tiene un correo válido.'));
     }
 
@@ -88,12 +102,14 @@ export class FacturaService {
     };
 
     try {
+      const response = await this.sendInvoice(invoiceRequest).toPromise();
+      console.log('Correo enviado con éxito:', response);
       window.open(URL.createObjectURL(pdfBlob), '_blank');
-      await this.sendInvoice(invoiceRequest).toPromise();
       return Promise.resolve(invoiceNumber);
     } catch (error) {
-      console.error('Error al generar o enviar la factura:', error);
-      return Promise.reject(new Error('Error al generar o enviar la factura: ' + (error as Error).message));
+      console.error('Error al enviar el correo, pero se abrirá el PDF localmente:', error);
+      window.open(URL.createObjectURL(pdfBlob), '_blank');
+      return Promise.reject(new Error('Error al enviar el correo: ' + (error as Error).message));
     }
   }
 
@@ -110,8 +126,12 @@ export class FacturaService {
   }
 
   private sendInvoice(invoiceRequest: any): Observable<any> {
+    const token = localStorage.getItem('jwt');
+    if (!token) {
+      console.warn('No se encontró token JWT en localStorage');
+    }
     return this.http.post(this.apiUrl, invoiceRequest, {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('jwt')}` }
+      headers: { 'Authorization': `Bearer ${token}` }
     }).pipe(
       catchError(error => {
         console.error('Error al enviar el correo:', error);
